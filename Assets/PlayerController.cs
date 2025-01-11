@@ -21,6 +21,8 @@ public class PlayerController : MonoBehaviour
 
     Coroutine movePlayer;
 
+    bool isMoving;
+
     float m_axis;
 
     //------------------Camera--------------------//
@@ -63,9 +65,10 @@ public class PlayerController : MonoBehaviour
 
     private void MovePerformed(InputAction.CallbackContext context)
     {
-        m_axis = context.ReadValue<float>();
-        if(movePlayer == null)
+        //m_axis = context.ReadValue<Vector2>();
+        if(movePlayer == null && !isMoving)
         {
+            isMoving = true;
             movePlayer = StartCoroutine(Move());
         }
     }
@@ -75,14 +78,14 @@ public class PlayerController : MonoBehaviour
         m_axis = context.ReadValue<float>();
         if (movePlayer != null)
         {
-            
+            isMoving = false;
             StopCoroutine(movePlayer);
             movePlayer = null;
         }
     }
     IEnumerator  Move()
     {
-        Vector3 moveDer = new Vector3();
+        Vector3 moveDer = Vector3.forward * m_axis;
         rb.AddForce(moveDer * moveSpeed * 10f, ForceMode.Force);
         yield return new WaitForFixedUpdate();
     }
