@@ -4,6 +4,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.UIElements;
 
 public class PlayerController : MonoBehaviour
 {
@@ -20,9 +21,11 @@ public class PlayerController : MonoBehaviour
 
     Coroutine movePlayer;
 
+    float m_axis;
+
+    //------------------Camera--------------------//
     Camera playerCamera;
 
-    float m_axis;
 
     void Awake()
     {
@@ -38,7 +41,6 @@ public class PlayerController : MonoBehaviour
         playerInput.actions.FindAction("Move").performed += MovePerformed;
         playerInput.actions.FindAction("Move").canceled += MoveCancelled;
 
-        playerInput.actions.FindAction("Look").performed += LookPerformed;
 
     }
 
@@ -56,18 +58,6 @@ public class PlayerController : MonoBehaviour
    private void Jump()
     {
         rb.AddForce(Vector3.up * jumpForce * 10f, ForceMode.Impulse);
-    }
-
-    private void LookPerformed(InputAction.CallbackContext context)
-    {
-        m_axis = context.ReadValue<float>();
-        Look();
-    }
-
-    private void Look()
-    {
-        Vector3 moveDer = new Vector3(m_axis, m_axis, 0);
-        playerCamera.transform.position = moveDer;
     }
 
 
@@ -92,7 +82,7 @@ public class PlayerController : MonoBehaviour
     }
     IEnumerator  Move()
     {
-        Vector3 moveDer = new Vector3(m_axis,m_axis, 0);
+        Vector3 moveDer = new Vector3();
         rb.AddForce(moveDer * moveSpeed * 10f, ForceMode.Force);
         yield return new WaitForFixedUpdate();
     }
