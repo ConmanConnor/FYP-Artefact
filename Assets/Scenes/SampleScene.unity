@@ -482,7 +482,7 @@ GameObject:
   - component: {fileID: 1265934272}
   - component: {fileID: 1265934271}
   - component: {fileID: 1265934270}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Plane
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -921,11 +921,12 @@ MonoBehaviour:
   moveSpeed: 5
   jumpForce: 0.5
   isGrounded: 0
-  layerMask:
+  layerMaskGround:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 8
   playerFeet: {fileID: 1499290915}
   playerHead: {fileID: 741686764}
+  isMoving: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

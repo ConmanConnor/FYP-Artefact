@@ -13,10 +13,12 @@ public class PlayerController : MonoBehaviour
    [SerializeField]float moveSpeed;
    [SerializeField] float jumpForce;
    [SerializeField] bool isGrounded;
-   [SerializeField] LayerMask layerMask;
+   [SerializeField] LayerMask layerMaskGround;
 
    [SerializeField]Transform playerFeet;
    [SerializeField]Transform playerHead;
+
+    RaycastHit hit;
 
     PlayerInput playerInput;
 
@@ -53,7 +55,7 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        groundCheck();
     }
 
     private void JumpPerformed(InputAction.CallbackContext context)
@@ -63,7 +65,11 @@ public class PlayerController : MonoBehaviour
 
    private void Jump()
     {
-        rb.AddForce(Vector3.up * jumpForce * 10f, ForceMode.Impulse);
+        if(isGrounded)
+        {
+            rb.AddForce(Vector3.up * jumpForce * 10f, ForceMode.Impulse);
+        }
+        
     }
 
 
@@ -96,6 +102,17 @@ public class PlayerController : MonoBehaviour
 
     private void groundCheck()
     {
-
+        if(Physics.Raycast(playerFeet.transform.position, transform.TransformDirection(Vector3.down),out hit, 0.5f,layerMaskGround))
+        {
+            isGrounded = true;
+            Debug.Log("Ground");
+            Debug.DrawRay(playerFeet.transform.position, transform.TransformDirection(Vector3.down) * hit.distance, Color.green);
+        }
+        else
+        {
+            isGrounded = false;
+            Debug.Log("No Ground");
+            Debug.DrawRay(playerFeet.transform.position, transform.TransformDirection(Vector3.down) * hit.distance, Color.red);
+        }
     }
 }
