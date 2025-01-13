@@ -16,14 +16,16 @@ public class PlayerController : MonoBehaviour
    [SerializeField] LayerMask layerMask;
 
    [SerializeField]Transform playerFeet;
+   [SerializeField]Transform playerHead;
 
     PlayerInput playerInput;
 
     Coroutine movePlayer;
 
-    bool isMoving;
+    public bool isMoving;
 
-    float m_axis;
+    float Input;
+    Vector2 InputMove;
 
     //------------------Camera--------------------//
     Camera playerCamera;
@@ -34,6 +36,8 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         playerInput = GetComponent<PlayerInput>();
         playerCamera = Camera.main;
+
+        
     }
     private void Start()
     {
@@ -65,7 +69,7 @@ public class PlayerController : MonoBehaviour
 
     private void MovePerformed(InputAction.CallbackContext context)
     {
-        //m_axis = context.ReadValue<Vector2>();
+        InputMove = context.ReadValue<Vector2>();
         if(movePlayer == null && !isMoving)
         {
             isMoving = true;
@@ -75,18 +79,18 @@ public class PlayerController : MonoBehaviour
 
     private void MoveCancelled(InputAction.CallbackContext context)
     {
-        m_axis = context.ReadValue<float>();
+        InputMove = context.ReadValue<Vector2>();
         if (movePlayer != null)
         {
             isMoving = false;
-            StopCoroutine(movePlayer);
+            StopCoroutine(Move());
             movePlayer = null;
         }
     }
     IEnumerator  Move()
     {
-        Vector3 moveDer = Vector3.forward * m_axis;
-        rb.AddForce(moveDer * moveSpeed * 10f, ForceMode.Force);
+        Vector3 movedirection = playerHead.forward * InputMove.y + playerHead.right * InputMove.x;
+        rb.AddForce(movedirection.normalized * moveSpeed * 10f, ForceMode.Force);
         yield return new WaitForFixedUpdate();
     }
 
