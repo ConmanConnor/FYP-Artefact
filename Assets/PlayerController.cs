@@ -56,6 +56,8 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         groundCheck();
+
+        rb.rotation = playerCamera.transform.rotation;
     }
 
     private void JumpPerformed(InputAction.CallbackContext context)
@@ -106,11 +108,14 @@ public class PlayerController : MonoBehaviour
     }
     IEnumerator  Move()
     {
-        //Calculates movement directions using vector 3 and input values
-        Vector3 movedirection = playerHead.forward * InputMove.y + playerHead.right * InputMove.x;
-        //Adds force to player
-        rb.AddForce(movedirection.normalized * moveSpeed * 10f, ForceMode.Force);
-        yield return new WaitForFixedUpdate();
+        while (isMoving)
+        {
+            //Calculates movement directions using vector 3 and input values
+            Vector3 movedirection = playerHead.forward * InputMove.y + playerHead.right * InputMove.x;
+            //Adds force to player
+            rb.AddForce(movedirection.normalized * moveSpeed * 10f, ForceMode.Force);
+            yield return new WaitForFixedUpdate();
+        }
     }
 
     private void groundCheck()
