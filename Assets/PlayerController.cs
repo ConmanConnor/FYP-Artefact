@@ -61,17 +61,9 @@ public class PlayerController : MonoBehaviour
     {
         groundCheck();
 
-        rb.rotation = playerCamera.transform.rotation;
+        rb.rotation = Quaternion.Euler(playerCamera.transform.rotation.x, playerCamera.transform.rotation.y, playerCamera.transform.rotation.z);
 
-        if(!isGrounded || !isWallrun)
-        {
-            canJump = false;
-            WallRun();
-        }
-        else
-        {
-            canJump = true;
-        }
+        WallRun();
     }
 
     private void JumpPerformed(InputAction.CallbackContext context)
@@ -149,23 +141,23 @@ public class PlayerController : MonoBehaviour
         foreach (Vector3 direction in directions)
         {
             //Raycast position = player position
-            Vector3 wallRayPos = transform.position;
+            Vector3 wallRayPos = rb.transform.position;
 
             //Casts ray if hit result is wall layer
-            if (Physics.Raycast(wallRayPos, transform.TransformDirection(direction), out hit, 10f, layerMaskWall))
+            if (Physics.Raycast(wallRayPos, transform.TransformDirection(direction), out hit, 2f, layerMaskWall))
             {
                 //wall was detected
                 wallDetected = true;
 
                 //draw ray for debugging
-                Debug.DrawRay(wallRayPos, transform.TransformDirection(Vector3.down) * 10f, Color.green);
+                Debug.DrawRay(wallRayPos, transform.TransformDirection(direction) * 2f, Color.green);
                 Debug.Log("I am Wallrunning");
                 break;
             }
             else
             {
                 //draw different color ray
-                Debug.DrawRay(wallRayPos, transform.TransformDirection(Vector3.down) * 10f, Color.red);
+                Debug.DrawRay(wallRayPos, transform.TransformDirection(direction) * 2f, Color.red);
             }
         }
 
