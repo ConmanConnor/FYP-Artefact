@@ -13,7 +13,9 @@ public class PlayerController : MonoBehaviour
    [SerializeField]float moveSpeed;
    [SerializeField] float jumpForce;
    [SerializeField] bool isGrounded;
+
    [SerializeField] LayerMask layerMaskGround;
+   [SerializeField] LayerMask layerMaskWall;
 
    [SerializeField]Transform playerFeet;
    [SerializeField]Transform playerHead;
@@ -25,6 +27,8 @@ public class PlayerController : MonoBehaviour
     Coroutine movePlayer;
 
     public bool isMoving;
+    public bool isWallrun;
+    public bool canJump;
 
     Vector2 InputMove;
 
@@ -58,6 +62,16 @@ public class PlayerController : MonoBehaviour
         groundCheck();
 
         rb.rotation = playerCamera.transform.rotation;
+
+        if(!isGrounded || !isWallrun)
+        {
+            canJump = false;
+            WallRun();
+        }
+        else
+        {
+            canJump = true;
+        }
     }
 
     private void JumpPerformed(InputAction.CallbackContext context)
@@ -68,7 +82,7 @@ public class PlayerController : MonoBehaviour
    private void Jump()
     {
         //checks if player is grounded
-        if(isGrounded)
+        if(isGrounded && canJump)
         {
             //Adds upward force
             rb.AddForce(Vector3.up * jumpForce * 10f, ForceMode.Impulse);
@@ -121,6 +135,45 @@ public class PlayerController : MonoBehaviour
         { 
             rb.linearVelocity = Vector3.zero;
         }
+    }
+
+    private void WallRun()
+    {
+        //Holds a list of directions
+        Vector3[] directions = { Vector3.right, Vector3.left };
+
+        //Detects if a wall was hit
+        bool wallDetected = false;
+
+        //for each direction in array
+        foreach (Vector3 direction in directions)
+        {
+            //Raycast position = player position
+            Vector3 wallRayPos = transform.position;
+
+            //Casts ray if hit result is wall layer
+            if (Physics.Raycast(wallRayPos, transform.TransformDirection(direction), out hit, 10f, layerMaskWall))
+            {
+                //wall was detected
+                wallDetected = true;
+
+                //draw ray for debugging
+                Debug.DrawRay(wallRayPos, transform.TransformDirection(Vector3.down) * 10f, Color.green);
+                Debug.Log("I am Wallrunning");
+                break;
+            }
+            else
+            {
+                //draw different color ray
+                Debug.DrawRay(wallRayPos, transform.TransformDirection(Vector3.down) * 10f, Color.red);
+            }
+        }
+
+        //Updates player state
+        isWallrun = wallDetected;
+        canJump = wallDetected;
+        rb.useGravity = !wallDetected;
+
     }
 
     private void groundCheck()
