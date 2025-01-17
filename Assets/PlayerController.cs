@@ -61,7 +61,12 @@ public class PlayerController : MonoBehaviour
     {
         groundCheck();
 
-        rb.rotation = Quaternion.Euler(playerCamera.transform.rotation.x, playerCamera.transform.rotation.y, playerCamera.transform.rotation.z);
+        //rotates the player to match the camera without following the z and x axis 
+        var CharacterRotation = playerCamera.transform.rotation;
+        CharacterRotation.x = 0;
+        CharacterRotation.z = 0;
+
+        transform.rotation = CharacterRotation;
 
         WallRun();
     }
@@ -74,10 +79,11 @@ public class PlayerController : MonoBehaviour
    private void Jump()
     {
         //checks if player is grounded
-        if(isGrounded && canJump)
+        if(isGrounded)
         {
             //Adds upward force
             rb.AddForce(Vector3.up * jumpForce * 10f, ForceMode.Impulse);
+            //Debug.Log("Jumpy");
         }
         
     }
@@ -141,7 +147,7 @@ public class PlayerController : MonoBehaviour
         foreach (Vector3 direction in directions)
         {
             //Raycast position = player position
-            Vector3 wallRayPos = rb.transform.position;
+            Vector3 wallRayPos = transform.position;
 
             //Casts ray if hit result is wall layer
             if (Physics.Raycast(wallRayPos, transform.TransformDirection(direction), out hit, 2f, layerMaskWall))
@@ -175,14 +181,14 @@ public class PlayerController : MonoBehaviour
         {
             //player is grounded
             isGrounded = true;
-            Debug.Log("Ground");
+           // Debug.Log("Ground");
             Debug.DrawRay(playerFeet.transform.position, transform.TransformDirection(Vector3.down) * hit.distance, Color.green);
         }
         else
         {
             //Player is not grounded
             isGrounded = false;
-            Debug.Log("No Ground");
+            //Debug.Log("No Ground");
             Debug.DrawRay(playerFeet.transform.position, transform.TransformDirection(Vector3.down) * hit.distance, Color.red);
         }
     }
