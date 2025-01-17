@@ -26,8 +26,8 @@ public class PlayerController : MonoBehaviour
 
     public bool isMoving;
 
-    float Input;
     Vector2 InputMove;
+
 
     //------------------Camera--------------------//
     Camera playerCamera;
@@ -115,6 +115,11 @@ public class PlayerController : MonoBehaviour
             //Adds force to player
             rb.AddForce(movedirection.normalized * moveSpeed * 10f, ForceMode.Force);
             yield return new WaitForFixedUpdate();
+        }
+
+        if (!isMoving) 
+        { 
+            rb.linearVelocity = Vector3.zero;
         }
     }
 

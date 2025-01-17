@@ -918,7 +918,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: caaade88de3246941b65410a4ce28e6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 1
+  moveSpeed: 1.2
   jumpForce: 0.5
   isGrounded: 0
   layerMaskGround:
