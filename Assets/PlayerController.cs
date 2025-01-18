@@ -203,15 +203,12 @@ public class PlayerController : MonoBehaviour
             canJump = wallDetected;
 
             //Add move player here!
+            //Only wall run if the camera is set on the wall to prevent side catching
             
-
-            //rb.linearVelocity = Vector3.zero;
-            //rb.useGravity = !wallDetected;
             
             maxWallTime -= Time.deltaTime;
             if(maxWallTime < 0)
             {
-                //rb.useGravity = true;
                 isWallrun = false;
                
             }
