@@ -32,6 +32,8 @@ public class PlayerController : MonoBehaviour
 
     Vector2 InputMove;
 
+    Animator Animator;
+
 
     //------------------Camera--------------------//
     Camera playerCamera;
@@ -42,6 +44,7 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         playerInput = GetComponent<PlayerInput>();
         playerCamera = Camera.main;
+        Animator = GetComponent<Animator>();
 
         
     }
