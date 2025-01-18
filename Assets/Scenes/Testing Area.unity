@@ -533,11 +533,17 @@ PrefabInstance:
       objectReference: {fileID: 9100000, guid: d355dad61758ffc48accfd4a918ccecd, type: 2}
     - target: {fileID: 5866666021909216657, guid: c7116b6c825c8b845b17d603ecbe3177, type: 3}
       propertyPath: m_WarningMessage
-      value: 
+      value: "\nBinding warning: Some generic clip(s) animate transforms that are
+        already bound by a Humanoid avatar. These transforms can only be changed
+        by Humanoid clips.\n\tTransform 'B-indexFinger02.L'\n\tTransform 'B-upperArm.L'\n\tTransform
+        'B-hand.L'\n\tTransform 'B-ringFinger02.R'\n\tTransform 'B-shin.L'\n\tTransform
+        'B-middleFinger01.L'\n\tTransform 'B-ringFinger02.L'\n\tTransform 'B-foot.R'\n\tTransform
+        'B-indexFinger02.R'\n\tTransform 'B-ringFinger01.L'\n\tand more ...\n\tFrom
+        animation clip 'mixamo.com'"
       objectReference: {fileID: 0}
     - target: {fileID: 5866666021909216657, guid: c7116b6c825c8b845b17d603ecbe3177, type: 3}
       propertyPath: m_ApplyRootMotion
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1078,7 +1084,13 @@ Animator:
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_AnimatePhysics: 0
-  m_WarningMessage: 
+  m_WarningMessage: "\nBinding warning: Some generic clip(s) animate transforms that
+    are already bound by a Humanoid avatar. These transforms can only be changed
+    by Humanoid clips.\n\tTransform 'B-indexFinger02.L'\n\tTransform 'B-upperArm.L'\n\tTransform
+    'B-hand.L'\n\tTransform 'B-ringFinger02.R'\n\tTransform 'B-shin.L'\n\tTransform
+    'B-middleFinger01.L'\n\tTransform 'B-ringFinger02.L'\n\tTransform 'B-foot.R'\n\tTransform
+    'B-indexFinger02.R'\n\tTransform 'B-ringFinger01.L'\n\tand more ...\n\tFrom animation
+    clip 'mixamo.com'"
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0

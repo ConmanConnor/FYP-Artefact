@@ -30,6 +30,8 @@ public class PlayerController : MonoBehaviour
     public bool isWallrun;
     public bool canJump;
 
+    float wallTime;
+
     Vector2 InputMove;
 
     Animator Animator;
@@ -45,6 +47,7 @@ public class PlayerController : MonoBehaviour
         playerInput = GetComponent<PlayerInput>();
         playerCamera = Camera.main;
         Animator = GetComponent<Animator>();
+       
 
         
     }
@@ -65,11 +68,11 @@ public class PlayerController : MonoBehaviour
         groundCheck();
 
         //rotates the player to match the camera without following the z and x axis 
-        var CharacterRotation = playerCamera.transform.rotation;
-        CharacterRotation.x = 0;
-        CharacterRotation.z = 0;
+        var playerRotation = playerCamera.transform.rotation;
+        playerRotation.x = 0;
+        playerRotation.z = 0;
 
-        transform.rotation = CharacterRotation;
+        transform.rotation = playerRotation;
 
         WallRun();
     }
@@ -103,6 +106,8 @@ public class PlayerController : MonoBehaviour
             isMoving = true;
             //Start the coroutine to move player
             movePlayer = StartCoroutine(Move());
+
+            //Animator.SetTrigger("Move?");
         }
     }
 
@@ -143,6 +148,8 @@ public class PlayerController : MonoBehaviour
         //Holds a list of directions
         Vector3[] directions = { Vector3.right, Vector3.left };
 
+        wallTime = Time.deltaTime;
+
         //Detects if a wall was hit
         bool wallDetected = false;
 
@@ -153,27 +160,29 @@ public class PlayerController : MonoBehaviour
             Vector3 wallRayPos = transform.position;
 
             //Casts ray if hit result is wall layer
-            if (Physics.Raycast(wallRayPos, transform.TransformDirection(direction), out hit, 2f, layerMaskWall))
+            if (Physics.Raycast(wallRayPos, transform.TransformDirection(direction), out hit, 0.8f, layerMaskWall))
             {
                 //wall was detected
                 wallDetected = true;
 
                 //draw ray for debugging
-                Debug.DrawRay(wallRayPos, transform.TransformDirection(direction) * 2f, Color.green);
-                Debug.Log("I am Wallrunning");
+                Debug.DrawRay(wallRayPos, transform.TransformDirection(direction) * 0.8f, Color.green);
+                Debug.Log("Wall detected");
                 break;
             }
             else
             {
                 //draw different color ray
-                Debug.DrawRay(wallRayPos, transform.TransformDirection(direction) * 2f, Color.red);
+                Debug.DrawRay(wallRayPos, transform.TransformDirection(direction) * 0.8f, Color.red);
             }
         }
-
-        //Updates player state
-        isWallrun = wallDetected;
-        canJump = wallDetected;
-        rb.useGravity = !wallDetected;
+        if (!isGrounded)
+        {
+            //Updates player state
+            isWallrun = wallDetected;
+            canJump = wallDetected;
+            rb.useGravity = !wallDetected;
+        }
 
     }
 
