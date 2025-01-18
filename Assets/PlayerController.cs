@@ -162,6 +162,7 @@ public class PlayerController : MonoBehaviour
         {
             Animator.Play("Idle");
         }
+        
     }
 
     private void WallRun()

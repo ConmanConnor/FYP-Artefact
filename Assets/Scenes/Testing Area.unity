@@ -419,12 +419,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 741686763}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 1.579, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1922013137}
+  m_Father: {fileID: 530868925}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &832575517
 GameObject:
@@ -547,7 +547,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: c7116b6c825c8b845b17d603ecbe3177, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 741686764}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c7116b6c825c8b845b17d603ecbe3177, type: 3}
 --- !u!1 &1265934269
@@ -833,7 +836,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 530868925}
-  - {fileID: 741686764}
   - {fileID: 1499290915}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1084,13 +1086,7 @@ Animator:
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_AnimatePhysics: 0
-  m_WarningMessage: "\nBinding warning: Some generic clip(s) animate transforms that
-    are already bound by a Humanoid avatar. These transforms can only be changed
-    by Humanoid clips.\n\tTransform 'B-indexFinger02.L'\n\tTransform 'B-upperArm.L'\n\tTransform
-    'B-hand.L'\n\tTransform 'B-ringFinger02.R'\n\tTransform 'B-shin.L'\n\tTransform
-    'B-middleFinger01.L'\n\tTransform 'B-ringFinger02.L'\n\tTransform 'B-foot.R'\n\tTransform
-    'B-indexFinger02.R'\n\tTransform 'B-ringFinger01.L'\n\tand more ...\n\tFrom animation
-    clip 'mixamo.com'"
+  m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
