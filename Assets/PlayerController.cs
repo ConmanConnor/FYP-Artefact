@@ -128,6 +128,8 @@ public class PlayerController : MonoBehaviour
             StopCoroutine(Move());
             //Couroutine is now null 
             movePlayer = null;
+
+            rb.linearVelocity = Vector3.zero;
         }
     }
     IEnumerator  Move()
@@ -138,12 +140,13 @@ public class PlayerController : MonoBehaviour
             Vector3 movedirection = playerHead.forward * InputMove.y + playerHead.right * InputMove.x;
             //Adds force to player
             rb.AddForce(movedirection.normalized * moveSpeed * 10f, ForceMode.Force);
+            
             yield return new WaitForFixedUpdate();
         }
 
         if (!isMoving) 
-        { 
-            rb.linearVelocity = Vector3.zero;
+        {
+            Animator.Play("Idle");
         }
     }
 
