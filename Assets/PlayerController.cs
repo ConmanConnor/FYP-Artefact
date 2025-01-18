@@ -30,7 +30,7 @@ public class PlayerController : MonoBehaviour
     public bool isWallrun;
     public bool canJump;
 
-    float wallTime;
+    float maxWallTime = 500f;
 
     Vector2 InputMove;
 
@@ -74,6 +74,20 @@ public class PlayerController : MonoBehaviour
 
         transform.rotation = playerRotation;
 
+        if(!isGrounded)
+        {
+            canJump = false;
+        }
+        else if(isWallrun)
+        {
+            canJump = true;
+        }
+        else
+        {
+            canJump = true;
+        }
+            
+
         WallRun();
     }
 
@@ -85,7 +99,7 @@ public class PlayerController : MonoBehaviour
    private void Jump()
     {
         //checks if player is grounded
-        if(isGrounded)
+        if(isGrounded && canJump)
         {
             //Adds upward force
             rb.AddForce(Vector3.up * jumpForce * 10f, ForceMode.Impulse);
@@ -153,9 +167,7 @@ public class PlayerController : MonoBehaviour
     private void WallRun()
     {
         //Holds a list of directions
-        Vector3[] directions = { Vector3.right, Vector3.left };
-
-        wallTime = Time.deltaTime;
+        Vector3[] directions = { Vector3.right, Vector3.left,Vector3.forward };
 
         //Detects if a wall was hit
         bool wallDetected = false;
@@ -188,7 +200,20 @@ public class PlayerController : MonoBehaviour
             //Updates player state
             isWallrun = wallDetected;
             canJump = wallDetected;
-            rb.useGravity = !wallDetected;
+
+            //Add move player here!
+            
+
+            //rb.linearVelocity = Vector3.zero;
+            //rb.useGravity = !wallDetected;
+            
+            maxWallTime -= Time.deltaTime;
+            if(maxWallTime < 0)
+            {
+                //rb.useGravity = true;
+                isWallrun = false;
+               
+            }
         }
 
     }
