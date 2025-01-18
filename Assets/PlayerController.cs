@@ -107,9 +107,10 @@ public class PlayerController : MonoBehaviour
             //Start the coroutine to move player
             movePlayer = StartCoroutine(Move());
 
-            if(isMoving )
+            while(isMoving)
             {
                 Animator.Play("Running");
+                return;
             }
         }
     }
