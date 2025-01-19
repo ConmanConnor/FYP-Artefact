@@ -1056,7 +1056,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 1.2
-  jumpForce: 0.5
+  jumpForce: 1
   isGrounded: 0
   layerMaskGround:
     serializedVersion: 2
