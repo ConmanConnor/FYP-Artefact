@@ -30,7 +30,7 @@ public class PlayerController : MonoBehaviour
     public bool isWallrun;
     public bool canJump;
 
-    float maxWallTime = 500f;
+    float maxWallTime = 10f;
 
     Vector2 InputMove;
 
@@ -201,16 +201,22 @@ public class PlayerController : MonoBehaviour
             //Updates player state
             isWallrun = wallDetected;
             canJump = wallDetected;
+            Debug.Log("Hit result is "+hit.normal);
 
-            //Add move player here!
+            //move direction while running 
+            Vector3 wallRunDire = Vector3.Cross(hit.normal, Vector3.up);
+
+            //moves player based on direction of approach (left,right,forward)
+            
+            
             //Only wall run if the camera is set on the wall to prevent side catching
-            
-            
+
+
             maxWallTime -= Time.deltaTime;
             if(maxWallTime < 0)
             {
                 isWallrun = false;
-               
+                return;
             }
         }
 

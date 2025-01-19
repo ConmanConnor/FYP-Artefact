@@ -420,7 +420,7 @@ Transform:
   m_GameObject: {fileID: 741686763}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.579, z: 0}
+  m_LocalPosition: {x: 0, y: 1.579, z: 0.001}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -795,8 +795,8 @@ Transform:
   m_GameObject: {fileID: 1603282280}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -24.64, y: 3.6, z: 0}
-  m_LocalScale: {x: 1, y: 8.125375, z: 50.480545}
+  m_LocalPosition: {x: -28.3, y: 3.6, z: 0}
+  m_LocalScale: {x: 6.775745, y: 8.125375, z: 50.480545}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -871,7 +871,7 @@ Rigidbody:
   m_GameObject: {fileID: 1922013136}
   serializedVersion: 4
   m_Mass: 1
-  m_Drag: 0
+  m_Drag: 1
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
@@ -1055,7 +1055,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: caaade88de3246941b65410a4ce28e6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 1
+  moveSpeed: 1.2
   jumpForce: 0.5
   isGrounded: 0
   layerMaskGround:
