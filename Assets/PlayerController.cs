@@ -196,26 +196,32 @@ public class PlayerController : MonoBehaviour
                 Debug.DrawRay(wallRayPos, transform.TransformDirection(direction) * 0.8f, Color.red);
             }
         }
-        if (!isGrounded)
+        if (!isGrounded && wallDetected)
         {
             //Updates player state
-            isWallrun = wallDetected;
-            canJump = wallDetected;
+            isWallrun = true;
+            canJump = true;
             Debug.Log("Hit result is "+hit.normal);
 
             //move direction while running 
-            Vector3 wallRunDire = Vector3.Cross(hit.normal, Vector3.up);
+            Vector3 wallRunDire = Vector3.Cross(hit.normal, Vector3.up).normalized;
 
             //moves player based on direction of approach (left,right,forward)
             
             
+            rb.AddForce(wallRunDire * moveSpeed * 5f, ForceMode.Force);
+            
+          
+            
             //Only wall run if the camera is set on the wall to prevent side catching
 
 
+            //Tiks down the wall time to make sure you cant infinitely wall run
             maxWallTime -= Time.deltaTime;
-            if(maxWallTime < 0)
+            if(maxWallTime <= 0)
             {
                 isWallrun = false;
+                rb.linearVelocity = Vector3.zero;
                 return;
             }
         }
