@@ -8,37 +8,57 @@ using UnityEngine.UIElements;
 
 public class PlayerController : MonoBehaviour
 {
+    //------------------------RigidBody/Player components--------------------//
    Rigidbody rb;
-
-   [SerializeField]float moveSpeed;
-   [SerializeField] float jumpForce;
-   [SerializeField] bool isGrounded;
-
+    PlayerController playerCTR;
+  
+   
+    //-----------------------------Ogres have Layers---------//
    [SerializeField] LayerMask layerMaskGround;
    [SerializeField] LayerMask layerMaskWall;
 
+    //-----------------------Transform(noAutobots)---------//
    [SerializeField]Transform playerFeet;
    [SerializeField]Transform playerHead;
 
+    //-----------RayCast-------------------->
     RaycastHit hit;
+    RaycastHit sphereHit;
 
-    PlayerInput playerInput;
-
+   
+    //--------------------Coroutine---------------//
     Coroutine movePlayer;
 
+    //-----------------Bools-----------------------//
     public bool isMoving;
     public bool isWallrun;
     public bool canJump;
+    [SerializeField] bool isGrounded;
+    bool inputJump;
 
+    //-----------------floats----------------------//
     float maxWallTime = 10f;
+    [SerializeField] float moveSpeed;
+    [SerializeField] float jumpForce;
+    float distanceToObstacke;
+    float hitAngle;
 
+    //-------------Inputs--------------------------//
     Vector2 InputMove;
 
+    PlayerInput playerInput;
+
+    //-----------------Aninimation----------------//
     Animator Animator;
+
+    
 
 
     //------------------Camera--------------------//
     Camera playerCamera;
+
+    //-----------------------Vectors------------------//
+    Vector3 playerDire;
 
 
     void Awake()
@@ -54,10 +74,13 @@ public class PlayerController : MonoBehaviour
     private void Start()
     {
         playerInput.actions.FindAction("Jump").performed += JumpPerformed;
-        
+        playerInput.actions.FindAction("Jump").canceled += JumpCancelled;
+
 
         playerInput.actions.FindAction("Move").performed += MovePerformed;
         playerInput.actions.FindAction("Move").canceled += MoveCancelled;
+
+        playerCTR = GetComponent<PlayerController>();
 
 
     }
@@ -66,6 +89,9 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         groundCheck();
+
+        //Get player direction
+        playerDire = rb.linearVelocity;
 
         //rotates the player to match the camera without following the z and x axis 
         var playerRotation = playerCamera.transform.rotation;
@@ -94,9 +120,14 @@ public class PlayerController : MonoBehaviour
     private void JumpPerformed(InputAction.CallbackContext context)
     {
         Jump();
+        inputJump = true; 
+    }
+    private void JumpCancelled(InputAction.CallbackContext context)
+    {
+        inputJump = false;
     }
 
-   private void Jump()
+    private void Jump()
     {
         //checks if player is grounded
         if(isGrounded && canJump)
@@ -180,50 +211,72 @@ public class PlayerController : MonoBehaviour
             Vector3 wallRayPos = transform.position;
 
             //Casts ray if hit result is wall layer
-            if (Physics.Raycast(wallRayPos, transform.TransformDirection(direction), out hit, 0.8f, layerMaskWall))
+            if (Physics.SphereCast(wallRayPos, 0.5f, transform.TransformDirection(direction), out sphereHit, 1f, layerMaskWall,queryTriggerInteraction:QueryTriggerInteraction.Collide))
             {
                 //wall was detected
                 wallDetected = true;
 
+                //check for the hit object
+                Debug.Log("Hit result is " + sphereHit);
+
+                //store distance to obstacle
+                distanceToObstacke = sphereHit.distance;
+                Debug.Log("hit distance is: " + distanceToObstacke);
+
+                //Get the entry point and calculate the angle of the player
+                hitAngle = Vector3.Angle(sphereHit.normal, playerDire.normalized);
+                Debug.Log("Angle entry: " + hitAngle);
+
+
                 //draw ray for debugging
-                Debug.DrawRay(wallRayPos, transform.TransformDirection(direction) * 0.8f, Color.green);
+                Debug.DrawRay(wallRayPos, transform.TransformDirection(direction) * 1f, Color.green);
                 Debug.Log("Wall detected");
                 break;
             }
             else
             {
                 //draw different color ray
-                Debug.DrawRay(wallRayPos, transform.TransformDirection(direction) * 0.8f, Color.red);
+                Debug.DrawRay(wallRayPos, transform.TransformDirection(direction) * 1f, Color.red);
             }
         }
-        if (!isGrounded && wallDetected)
+        if (distanceToObstacke > 0 && wallDetected && inputJump)
         {
             //Updates player state
             isWallrun = true;
             canJump = true;
-            Debug.Log("Hit result is "+hit.normal);
+            Debug.Log("Wall Detected?: " + wallDetected + " Can Jump?: " + canJump);
 
             //move direction while running 
-            Vector3 wallRunDire = Vector3.Cross(hit.normal, Vector3.up).normalized;
+            Vector3 wallRunDire = Vector3.Cross(sphereHit.normal, Vector3.up).normalized;
 
             //moves player based on direction of approach (left,right,forward)
-            
-            
-            rb.AddForce(wallRunDire * moveSpeed * 5f, ForceMode.Force);
-            
-          
-            
-            //Only wall run if the camera is set on the wall to prevent side catching
+            switch(hitAngle)
+            {
+                case -180:
+                    rb.AddForce(wallRunDire * moveSpeed * 10f, ForceMode.Force);
+                    break;
+                case 180:
+                    rb.AddForce(-1 * wallRunDire * moveSpeed * 10f, ForceMode.Force);
+                    break;
+                case 90:
+                    rb.AddForce(Vector3.up * moveSpeed * 10f, ForceMode.Force);
+                    break;
+            }
 
-
+            /*
             //Tiks down the wall time to make sure you cant infinitely wall run
             maxWallTime -= Time.deltaTime;
+            Debug.Log(maxWallTime);
             if(maxWallTime <= 0)
             {
                 isWallrun = false;
                 rb.linearVelocity = Vector3.zero;
                 return;
             }
+            else
+            {
+                maxWallTime = Time.deltaTime;
+            }*/
         }
 
     }
