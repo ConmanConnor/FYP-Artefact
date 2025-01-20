@@ -28,6 +28,7 @@ public class PlayerController : MonoBehaviour
    
     //--------------------Coroutine---------------//
     Coroutine movePlayer;
+    Coroutine wallrunActive;
 
     //-----------------Bools-----------------------//
     public bool isMoving;
@@ -68,11 +69,10 @@ public class PlayerController : MonoBehaviour
         playerInput = GetComponent<PlayerInput>();
         playerCamera = Camera.main;
         Animator = GetComponent<Animator>();
-       
+        playerCTR = GetComponent<PlayerController>();
 
-        
     }
-    private void Start()
+    private void OnEnable()
     {
         playerInput.actions.FindAction("Jump").performed += JumpPerformed;
         playerInput.actions.FindAction("Jump").canceled += JumpCancelled;
@@ -80,10 +80,15 @@ public class PlayerController : MonoBehaviour
 
         playerInput.actions.FindAction("Move").performed += MovePerformed;
         playerInput.actions.FindAction("Move").canceled += MoveCancelled;
+    }
+    private void OnDisable()
+    {
+        playerInput.actions.FindAction("Jump").performed -= JumpPerformed;
+        playerInput.actions.FindAction("Jump").canceled -= JumpCancelled;
 
-        playerCTR = GetComponent<PlayerController>();
 
-
+        playerInput.actions.FindAction("Move").performed -= MovePerformed;
+        playerInput.actions.FindAction("Move").canceled -= MoveCancelled;
     }
 
     // Update is called once per frame
@@ -110,19 +115,41 @@ public class PlayerController : MonoBehaviour
         {
             canJump = true;
         }
+        /*
+        if (isWallrun)
+        {
             
+            //Tiks down the wall time to make sure you cant infinitely wall run
+            
+            maxWallTime -= Time.deltaTime;
+            Debug.Log(maxWallTime);
+            if(maxWallTime <= 0)
+            {
+                rb.linearVelocity = Vector3.zero;
+                rb.useGravity = true;
+                isWallrun = false;
+                return;
+            }
+            else
+            {
+                maxWallTime = 0.1f;
+            }
+        }*/
 
-        WallRun();
+
+        //WallRun();
     }
 
     private void JumpPerformed(InputAction.CallbackContext context)
     {
         Jump();
         inputJump = true; 
+        wallrunActive = StartCoroutine(WallRun());
     }
     private void JumpCancelled(InputAction.CallbackContext context)
     {
         inputJump = false;
+        StopCoroutine(WallRun());
     }
 
     private void Jump()
@@ -194,7 +221,7 @@ public class PlayerController : MonoBehaviour
         
     }
 
-    private void WallRun()
+    IEnumerator WallRun()
     {
         //Holds a list of directions
         Vector3[] directions = { Vector3.right, Vector3.left,Vector3.forward };
@@ -257,34 +284,24 @@ public class PlayerController : MonoBehaviour
             Vector3 wallRunDire = Vector3.Cross(sphereHit.normal, Vector3.up).normalized;
 
             //moves player based on direction of approach (left,right,forward)
-            switch(hitAngle)
+            switch (hitAngle)
             {
                 case 180:
                     rb.AddForce(wallRunDire * moveSpeed * 10f, ForceMode.Force);
+                    //rb.useGravity = !wallDetected;
                     break;
                 case 0:
                     rb.AddForce(-1 * wallRunDire * moveSpeed * 10f, ForceMode.Force);
+                    //rb.useGravity = !wallDetected;
                     break;
                 case 90:
                     rb.AddForce(Vector3.up * moveSpeed * 10f, ForceMode.Force);
+                    //rb.useGravity = !wallDetected;
                     break;
             }
-
-            /*
-            //Tiks down the wall time to make sure you cant infinitely wall run
-            maxWallTime -= Time.deltaTime;
-            Debug.Log(maxWallTime);
-            if(maxWallTime <= 0)
-            {
-                isWallrun = false;
-                rb.linearVelocity = Vector3.zero;
-                return;
-            }
-            else
-            {
-                maxWallTime = Time.deltaTime;
-            }*/
         }
+
+        yield return null;
 
     }
 
