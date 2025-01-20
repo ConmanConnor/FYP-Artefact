@@ -273,10 +273,10 @@ public class PlayerController : MonoBehaviour
                 Debug.DrawRay(wallRayPos, transform.TransformDirection(direction) * 1f, Color.red);
             }
         }
-        if (distanceToObstacke > 0 && wallDetected && inputJump)
+        if (distanceToObstacke > 0 && wallDetected)
         {
             //Updates player state
-            isWallrun = true;
+            //isWallrun = true;
             canJump = true;
             Debug.Log("Wall Detected?: " + wallDetected + " Can Jump?: " + canJump);
 
