@@ -59,6 +59,7 @@ public class PlayerController : MonoBehaviour
 
     //-----------------------Vectors------------------//
     Vector3 playerDire;
+    Vector3 hitAngleCross;
 
 
     void Awake()
@@ -89,9 +90,6 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         groundCheck();
-
-        //Get player direction
-        playerDire = rb.linearVelocity;
 
         //rotates the player to match the camera without following the z and x axis 
         var playerRotation = playerCamera.transform.rotation;
@@ -223,9 +221,18 @@ public class PlayerController : MonoBehaviour
                 distanceToObstacke = sphereHit.distance;
                 Debug.Log("hit distance is: " + distanceToObstacke);
 
+                //Get player direction
+                playerDire = direction;
+
                 //Get the entry point and calculate the angle of the player
                 hitAngle = Vector3.Angle(sphereHit.normal, playerDire.normalized);
+                hitAngleCross = Vector3.Cross(sphereHit.normal, playerDire).normalized;
                 Debug.Log("Angle entry: " + hitAngle);
+
+                if(hitAngleCross.y < 0)
+                {
+                    hitAngle = -hitAngle;
+                }
 
 
                 //draw ray for debugging
@@ -252,10 +259,10 @@ public class PlayerController : MonoBehaviour
             //moves player based on direction of approach (left,right,forward)
             switch(hitAngle)
             {
-                case -180:
+                case 180:
                     rb.AddForce(wallRunDire * moveSpeed * 10f, ForceMode.Force);
                     break;
-                case 180:
+                case 0:
                     rb.AddForce(-1 * wallRunDire * moveSpeed * 10f, ForceMode.Force);
                     break;
                 case 90:
