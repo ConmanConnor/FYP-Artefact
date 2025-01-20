@@ -36,6 +36,7 @@ public class PlayerController : MonoBehaviour
     public bool canJump;
     [SerializeField] bool isGrounded;
     bool inputJump;
+    bool wallDetected;
 
     //-----------------floats----------------------//
     float maxWallTime = 10f;
@@ -51,9 +52,6 @@ public class PlayerController : MonoBehaviour
 
     //-----------------Aninimation----------------//
     Animator Animator;
-
-    
-
 
     //------------------Camera--------------------//
     Camera playerCamera;
@@ -107,7 +105,7 @@ public class PlayerController : MonoBehaviour
         {
             canJump = false;
         }
-        else if(isWallrun)
+        else if(wallDetected)
         {
             canJump = true;
         }
@@ -140,16 +138,17 @@ public class PlayerController : MonoBehaviour
         //WallRun();
     }
 
+    //----------------------------Movement Mechanics----------------------------//
+
     private void JumpPerformed(InputAction.CallbackContext context)
     {
         Jump();
-        inputJump = true; 
         wallrunActive = StartCoroutine(WallRun());
+        
     }
     private void JumpCancelled(InputAction.CallbackContext context)
     {
-        inputJump = false;
-        StopCoroutine(WallRun());
+       StopCoroutine(WallRun());
     }
 
     private void Jump()
@@ -213,7 +212,7 @@ public class PlayerController : MonoBehaviour
             
             yield return new WaitForFixedUpdate();
         }
-
+        //Plays run animation
         if (!isMoving) 
         {
             Animator.Play("Idle");
@@ -227,7 +226,7 @@ public class PlayerController : MonoBehaviour
         Vector3[] directions = { Vector3.right, Vector3.left,Vector3.forward };
 
         //Detects if a wall was hit
-        bool wallDetected = false;
+        wallDetected = false;
 
         //for each direction in array
         foreach (Vector3 direction in directions)
@@ -253,11 +252,14 @@ public class PlayerController : MonoBehaviour
 
                 //Get the entry point and calculate the angle of the player
                 hitAngle = Vector3.Angle(sphereHit.normal, playerDire.normalized);
+                //find the cross betweem the hit angle
                 hitAngleCross = Vector3.Cross(sphereHit.normal, playerDire).normalized;
                 Debug.Log("Angle entry: " + hitAngle);
 
+                //if the angle cross value is below 0
                 if(hitAngleCross.y < 0)
                 {
+                    //convert to negative values
                     hitAngle = -hitAngle;
                 }
 
@@ -273,6 +275,7 @@ public class PlayerController : MonoBehaviour
                 Debug.DrawRay(wallRayPos, transform.TransformDirection(direction) * 1f, Color.red);
             }
         }
+        //if the player is close to the wall and there is a detected wall
         if (distanceToObstacke > 0 && wallDetected)
         {
             //Updates player state
@@ -304,7 +307,7 @@ public class PlayerController : MonoBehaviour
         yield return null;
 
     }
-
+    //---------------------------Ground Check------------------//
     private void groundCheck()
     {
         //Draws ray 
