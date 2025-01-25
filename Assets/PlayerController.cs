@@ -245,7 +245,7 @@ public class PlayerController : MonoBehaviour
             Vector3 wallRayPos = transform.position;
 
             //Casts ray if hit result is wall layer
-            if (Physics.SphereCast(wallRayPos, 0.5f, direction, out sphereHit, 1f, layerMaskWall,QueryTriggerInteraction.Collide))
+            if (Physics.SphereCast(wallRayPos, 0.9f, direction, out sphereHit, 1f, layerMaskWall,QueryTriggerInteraction.Collide))
             {
                 //wall was detected
                 wallDetected = true;
