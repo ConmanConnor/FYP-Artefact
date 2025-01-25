@@ -34,16 +34,19 @@ public class PlayerController : MonoBehaviour
     public bool isMoving;
     public bool isWallrun;
     public bool canJump;
-    [SerializeField] bool isGrounded;
-    bool inputJump;
+    [SerializeField] public bool isGrounded;
     bool wallDetected;
+   
 
     //-----------------floats----------------------//
     float maxWallTime = 10f;
     [SerializeField] float moveSpeed;
     [SerializeField] float jumpForce;
     float distanceToObstacke;
-    float hitAngle;
+    float dot;
+    float entry;
+    
+   
 
     //-------------Inputs--------------------------//
     Vector2 InputMove;
@@ -59,6 +62,7 @@ public class PlayerController : MonoBehaviour
     //-----------------------Vectors------------------//
     Vector3 playerDire;
     Vector3 hitAngleCross;
+    Vector3 directionOfPlayer;
 
 
     void Awake()
@@ -89,23 +93,23 @@ public class PlayerController : MonoBehaviour
         playerInput.actions.FindAction("Move").canceled -= MoveCancelled;
     }
 
-    // Update is called once per frame
-    void Update()
+    private void FixedUpdate()
     {
-        groundCheck();
-
         //rotates the player to match the camera without following the z and x axis 
         var playerRotation = playerCamera.transform.rotation;
         playerRotation.x = 0;
         playerRotation.z = 0;
+        wallrunActive = StartCoroutine(WallRun());
 
         transform.rotation = playerRotation;
 
-        if(!isGrounded)
+        directionOfPlayer = rb.linearVelocity.normalized;
+
+        if (!isGrounded)
         {
             canJump = false;
         }
-        else if(wallDetected)
+        else if (wallDetected)
         {
             canJump = true;
         }
@@ -136,6 +140,12 @@ public class PlayerController : MonoBehaviour
 
 
         //WallRun();
+    }
+    void Update()
+    {
+        groundCheck();
+
+        
     }
 
     //----------------------------Movement Mechanics----------------------------//
@@ -223,7 +233,7 @@ public class PlayerController : MonoBehaviour
     IEnumerator WallRun()
     {
         //Holds a list of directions
-        Vector3[] directions = { Vector3.right, Vector3.left,Vector3.forward };
+        Vector3[] directions = { Vector3.right, Vector3.left,Vector3.forward, Vector3.forward+Vector3.left,Vector3.forward+Vector3.right };
 
         //Detects if a wall was hit
         wallDetected = false;
@@ -235,39 +245,26 @@ public class PlayerController : MonoBehaviour
             Vector3 wallRayPos = transform.position;
 
             //Casts ray if hit result is wall layer
-            if (Physics.SphereCast(wallRayPos, 0.5f, transform.TransformDirection(direction), out sphereHit, 1f, layerMaskWall,queryTriggerInteraction:QueryTriggerInteraction.Collide))
+            if (Physics.SphereCast(wallRayPos, 0.5f, direction, out sphereHit, 1f, layerMaskWall,QueryTriggerInteraction.Collide))
             {
                 //wall was detected
                 wallDetected = true;
 
                 //check for the hit object
-                Debug.Log("Hit result is " + sphereHit);
+                //Debug.Log("Hit result is " + sphereHit);
 
                 //store distance to obstacle
                 distanceToObstacke = sphereHit.distance;
-                Debug.Log("hit distance is: " + distanceToObstacke);
-
-                //Get player direction
-                playerDire = direction;
+                //Debug.Log("hit distance is: " + distanceToObstacke;
 
                 //Get the entry point and calculate the angle of the player
-                hitAngle = Vector3.Angle(sphereHit.normal, playerDire.normalized);
-                //find the cross betweem the hit angle
-                hitAngleCross = Vector3.Cross(sphereHit.normal, playerDire).normalized;
-                Debug.Log("Angle entry: " + hitAngle);
-
-                //if the angle cross value is below 0
-                if(hitAngleCross.y < 0)
-                {
-                    //convert to negative values
-                    hitAngle = -hitAngle;
-                }
-
-
+                dot = Vector3.Dot(directionOfPlayer,sphereHit.normal);
+                //Turns dot into degrees
+                entry = Mathf.Acos(dot) * Mathf.Rad2Deg;
+                Debug.Log("Angle entry: " + dot);
                 //draw ray for debugging
                 Debug.DrawRay(wallRayPos, transform.TransformDirection(direction) * 1f, Color.green);
-                Debug.Log("Wall detected");
-                break;
+                //Debug.Log("Wall detected");
             }
             else
             {
@@ -284,10 +281,11 @@ public class PlayerController : MonoBehaviour
             Debug.Log("Wall Detected?: " + wallDetected + " Can Jump?: " + canJump);
 
             //move direction while running 
-            Vector3 wallRunDire = Vector3.Cross(sphereHit.normal, Vector3.up).normalized;
+            Vector3 wallRunDire = Vector3.Cross(sphereHit.normal, Vector3.up);
+            
 
             //moves player based on direction of approach (left,right,forward)
-            switch (hitAngle)
+            switch (entry)
             {
                 case 180:
                     rb.AddForce(wallRunDire * moveSpeed * 10f, ForceMode.Force);
@@ -304,7 +302,7 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        yield return null;
+        yield return new WaitForFixedUpdate();
 
     }
     //---------------------------Ground Check------------------//
