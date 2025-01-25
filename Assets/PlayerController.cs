@@ -233,45 +233,42 @@ public class PlayerController : MonoBehaviour
     IEnumerator WallRun()
     {
         //Holds a list of directions
-        Vector3[] directions = { Vector3.forward};
+        Vector3 directions = directionOfPlayer;
 
         //Detects if a wall was hit
         wallDetected = false;
+       
+        //Raycast position = player position
+        Vector3 wallRayPos = transform.position;
 
-        //for each direction in array
-        foreach (Vector3 direction in directions)
+        //Casts ray if hit result is wall layer
+        if (Physics.SphereCast(wallRayPos, 0.5f, directions, out sphereHit, 1f, layerMaskWall,QueryTriggerInteraction.Collide))
         {
-            //Raycast position = player position
-            Vector3 wallRayPos = transform.position;
+            //wall was detected
+            wallDetected = true;
 
-            //Casts ray if hit result is wall layer
-            if (Physics.SphereCast(wallRayPos, 0.9f, direction, out sphereHit, 1f, layerMaskWall,QueryTriggerInteraction.Collide))
-            {
-                //wall was detected
-                wallDetected = true;
+            //check for the hit object
+            //Debug.Log("Hit result is " + sphereHit);
 
-                //check for the hit object
-                //Debug.Log("Hit result is " + sphereHit);
+            //store distance to obstacle
+             distanceToObstacke = sphereHit.distance;
+            //Debug.Log("hit distance is: " + distanceToObstacke;
 
-                //store distance to obstacle
-                distanceToObstacke = sphereHit.distance;
-                //Debug.Log("hit distance is: " + distanceToObstacke;
-
-                //Get the entry point and calculate the angle of the player
-                dot = Vector3.Dot(directionOfPlayer,sphereHit.normal);
-                //Turns dot into degrees
-                entry = Mathf.Acos(dot) * Mathf.Rad2Deg;
-                Debug.Log("Angle entry: " + dot);
-                //draw ray for debugging
-                Debug.DrawRay(wallRayPos, transform.TransformDirection(direction) * 1f, Color.green);
-                //Debug.Log("Wall detected");
-            }
-            else
-            {
-                //draw different color ray
-                Debug.DrawRay(wallRayPos, transform.TransformDirection(direction) * 1f, Color.red);
-            }
-        }
+            //Get the entry point and calculate the angle of the player
+             dot = Vector3.Dot(directionOfPlayer.normalized,sphereHit.normal);
+            //Turns dot into degrees
+            entry = Mathf.Acos(dot) * Mathf.Rad2Deg;
+            Debug.Log("Angle entry: " + dot);
+             //draw ray for debugging
+             Debug.DrawRay(wallRayPos, directions * 1f, Color.green);
+            //Debug.Log("Wall detected");
+         }
+        else
+        {
+            //draw different color ray
+            Debug.DrawRay(wallRayPos, directions *  1f, Color.red);
+         }
+        
         //if the player is close to the wall and there is a detected wall
         if (distanceToObstacke > 0 && wallDetected)
         {
@@ -281,7 +278,7 @@ public class PlayerController : MonoBehaviour
             Debug.Log("Wall Detected?: " + wallDetected + " Can Jump?: " + canJump);
 
             //move direction while running 
-            Vector3 wallRunDire = Vector3.Cross(sphereHit.normal, Vector3.up);
+            Vector3 wallRunDire = Vector3.Cross(sphereHit.normal, directionOfPlayer.normalized);
             
 
             //moves player based on direction of approach (left,right,forward)
