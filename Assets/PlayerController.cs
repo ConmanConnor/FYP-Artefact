@@ -233,7 +233,7 @@ public class PlayerController : MonoBehaviour
     IEnumerator WallRun()
     {
         //Holds a list of directions
-        Vector3[] directions = { Vector3.right, Vector3.left,Vector3.forward, Vector3.forward+Vector3.left,Vector3.forward+Vector3.right };
+        Vector3[] directions = { Vector3.forward};
 
         //Detects if a wall was hit
         wallDetected = false;
