@@ -63,6 +63,7 @@ public class PlayerController : MonoBehaviour
     Vector3 playerDire;
     Vector3 hitAngleCross;
     Vector3 directionOfPlayer;
+    Vector3 playerForward;
 
 
     void Awake()
@@ -103,7 +104,9 @@ public class PlayerController : MonoBehaviour
 
         transform.rotation = playerRotation;
 
-        directionOfPlayer = transform.forward;
+        directionOfPlayer = rb.linearVelocity.normalized;
+
+        playerForward = transform.forward;
 
         if (!isGrounded)
         {
@@ -233,7 +236,7 @@ public class PlayerController : MonoBehaviour
     IEnumerator WallRun()
     {
         //Holds a list of directions
-        Vector3 directions = transform.position;
+        Vector3 directions = playerForward;
 
         //Detects if a wall was hit
         wallDetected = false;
@@ -252,7 +255,7 @@ public class PlayerController : MonoBehaviour
 
 
             //Get the entry point and calculate the angle of the player
-            entry = Vector3.Dot(-sphereHit.normal,directionOfPlayer);
+            dot = Vector3.Dot(directionOfPlayer,-sphereHit.normal);
             //Turns dot into degrees
             entry = Mathf.Acos(dot) * Mathf.Rad2Deg;
             Debug.Log("Angle entry: " + dot);
@@ -280,7 +283,7 @@ public class PlayerController : MonoBehaviour
             Debug.Log("Wall Detected?: " + wallDetected + " Can Jump?: " + canJump);
 
             //move direction while running 
-            Vector3 wallRunDire = Vector3.Cross(sphereHit.normal, transform.up);
+            Vector3 wallRunDire = Vector3.Cross(sphereHit.normal, Vector3.up);
 
 
             //moves player based on direction of approach (left,right,forward)
