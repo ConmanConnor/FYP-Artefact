@@ -103,7 +103,7 @@ public class PlayerController : MonoBehaviour
 
         transform.rotation = playerRotation;
 
-        directionOfPlayer = rb.linearVelocity.normalized;
+        directionOfPlayer = transform.forward;
 
         if (!isGrounded)
         {
@@ -252,7 +252,7 @@ public class PlayerController : MonoBehaviour
 
 
             //Get the entry point and calculate the angle of the player
-             dot = Vector3.Dot(directionOfPlayer.normalized,sphereHit.normal);
+            entry = Vector3.Dot(-sphereHit.normal,directionOfPlayer);
             //Turns dot into degrees
             entry = Mathf.Acos(dot) * Mathf.Rad2Deg;
             Debug.Log("Angle entry: " + dot);
@@ -281,23 +281,20 @@ public class PlayerController : MonoBehaviour
 
             //move direction while running 
             Vector3 wallRunDire = Vector3.Cross(sphereHit.normal, transform.up);
-            
+
 
             //moves player based on direction of approach (left,right,forward)
-            switch (entry)
+            if (entry < 45) // Running along the wall
             {
-                case 180:
-                    rb.AddForce(wallRunDire * moveSpeed * 10f, ForceMode.Force);
-                    //rb.useGravity = !wallDetected;
-                    break;
-                case 0:
-                    rb.AddForce(-1 * wallRunDire * moveSpeed * 10f, ForceMode.Force);
-                    //rb.useGravity = !wallDetected;
-                    break;
-                case 90:
-                    rb.AddForce(Vector3.up * moveSpeed * 10f, ForceMode.Force);
-                    //rb.useGravity = !wallDetected;
-                    break;
+                rb.AddForce(wallRunDire * moveSpeed * 10f, ForceMode.Force);
+            }
+            else if (entry < 135) // Climbing
+            {
+                rb.AddForce(Vector3.up * moveSpeed * 10f, ForceMode.Force);
+            }
+            else // Opposite wall-run direction
+            {
+                rb.AddForce(-wallRunDire * moveSpeed * 10f, ForceMode.Force);
             }
         }
 
