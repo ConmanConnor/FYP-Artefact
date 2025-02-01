@@ -4,14 +4,14 @@ using UnityEngine;
 public class HeadBib : MonoBehaviour
 {
     Rigidbody rb;
-    [SerializeField][Range(1f, 30f)]
+    [SerializeField]//[Range(1f, 30f)]
     float frequency = 10.0f;
-    [SerializeField][Range(0.01f, 1.3f)]
+    [SerializeField]//[Range(0.01f, 1.3f)]
     float Amplitude = 0.08f;
-    [SerializeField][Range(10f, 100f)]
+    [SerializeField]//[Range(10f, 100f)]
     float INTERspeed = 10.0f;
 
-    [SerializeField]Camera cam;
+    [SerializeField]Camera camHold;
 
     PlayerController playerController;
 
@@ -22,6 +22,9 @@ public class HeadBib : MonoBehaviour
         rb = GameObject.FindGameObjectWithTag("Player").GetComponent<Rigidbody>();
         originPos = transform.localPosition;
         playerController = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>();
+        camHold = this.GetComponentInChildren<Camera>();
+
+        originPos = transform.localPosition;
     }
 
     // Update is called once per frame
@@ -39,6 +42,10 @@ public class HeadBib : MonoBehaviour
         if (playerController.isMoving && playerController.isGrounded)
         {
             StartBob();
+        }
+        else
+        {
+            transform.localPosition = originPos;
         }
     }
 
