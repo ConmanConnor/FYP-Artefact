@@ -1062,7 +1062,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 84de995ee661d6345a02b493b0a9e122, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  frequency: 20
+  frequency: 18
   Amplitude: 1
   INTERspeed: 20
   camHold: {fileID: 0}
