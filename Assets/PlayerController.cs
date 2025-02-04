@@ -44,7 +44,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float jumpForce;
     float distanceToObstacke;
     float dot;
-    float objectNormal;
+    float wallNormal;
     
    
 
@@ -106,7 +106,6 @@ public class PlayerController : MonoBehaviour
         if(wallDetected)
         {
             wallrunActive = StartCoroutine(WallRun());
-            canJump = true;
 
         }
        
@@ -255,11 +254,11 @@ public class PlayerController : MonoBehaviour
             //Debug.Log("Wall Run Direction is: "+wallRunDire);
 
             //moves player based on direction of approach (left,right,forward)
-            if (objectNormal < 45f) // Running along the wall
+            if (wallNormal < 45f) // Running along the wall
             {
                 rb.AddForce(wallRunDire * moveSpeed * 10f, ForceMode.Force);
             }
-            else if (objectNormal < 135f) // Climbing
+            else if (wallNormal < 135f) // Climbing
             {
                 rb.AddForce(Vector3.up * moveSpeed * 10f, ForceMode.Force);
             }
@@ -267,6 +266,10 @@ public class PlayerController : MonoBehaviour
             {
                 rb.AddForce(-wallRunDire * moveSpeed * 10f, ForceMode.Force);
             }
+        }
+        else
+        {
+            isWallrun = false;
         }
 
         yield return new WaitForFixedUpdate();
@@ -294,7 +297,7 @@ public class PlayerController : MonoBehaviour
             dot = Vector3.Dot(playerForward, -sphereHit.normal);
 
             //Turns dot into degrees
-            objectNormal = Mathf.Acos(dot) * Mathf.Rad2Deg;
+            wallNormal = Mathf.Acos(dot) * Mathf.Rad2Deg;
             Debug.Log("Angle entry: " + dot);
 
             //Debug.Log("Wall detected");
@@ -313,6 +316,8 @@ public class PlayerController : MonoBehaviour
         distanceToObstacke = sphereHit.distance;
         //Debug.Log("hit distance is: " + distanceToObstacke;
     }
+
+
     //---------------------------Ground Check------------------//
     private void groundCheck()
     {
