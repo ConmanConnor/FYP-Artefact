@@ -35,7 +35,7 @@ public class PlayerController : MonoBehaviour
     public bool isWallrun;
     public bool canJump;
     [SerializeField] public bool isGrounded;
-    bool objectDetected;
+    bool wallDetected;
    
 
     //-----------------floats----------------------//
@@ -100,21 +100,26 @@ public class PlayerController : MonoBehaviour
         var playerRotation = playerCamera.transform.rotation;
         playerRotation.x = 0;
         playerRotation.z = 0;
-        wallrunActive = StartCoroutine(WallRun());
+
+        CheckWall();
+
+        if(wallDetected)
+        {
+            wallrunActive = StartCoroutine(WallRun());
+            canJump = true;
+
+        }
+       
 
         transform.rotation = playerRotation;
 
         directionOfPlayer = rb.linearVelocity.normalized;
 
-        playerForward = transform.forward;
+        playerForward = transform.forward.normalized;
 
-        if (!isGrounded)
+        if (!isGrounded && !isWallrun)
         {
             canJump = false;
-        }
-        else if (objectDetected)
-        {
-            canJump = true;
         }
         else
         {
@@ -237,73 +242,24 @@ public class PlayerController : MonoBehaviour
         //Holds a list of directions
         Vector3 directions = playerDire;
 
-        //Detects if a wall was hit
-        objectDetected = false;
-
-        //Raycast position = player position
-        Vector3 wallRayPos = transform.position;
-
-        //Casts ray if hit result is wall layer
-        if (Physics.SphereCast(wallRayPos, 0.8f, playerForward, out sphereHit, 1f, layerMaskWall, QueryTriggerInteraction.Collide))
-        {
-          //wall was detected
-          objectDetected = true;
-
-          //check for the hit object
-          //Debug.Log("Hit result is " + sphereHit);
-
-          //draw ray for debugging
-          Debug.DrawRay(wallRayPos, playerForward * 1f, Color.green);
-
-
-            if (Physics.Raycast(wallRayPos, transform.TransformDirection(directions), out hit, 1f, layerMaskWall))
-           {
-                //Get the entry point and calculate the angle of the player
-                dot = Vector3.Dot(playerForward, -hit.normal);
-                //Turns dot into degrees
-                objectNormal = Mathf.Acos(dot) * Mathf.Rad2Deg;
-                Debug.Log("Angle entry: " + dot);
-                //draw ray for debugging
-                Debug.DrawRay(wallRayPos, playerForward * 1f, Color.green);
-                //Debug.Log("Wall detected");
-           }
-            else
-            {
-                //draw different color ray
-                Debug.DrawRay(wallRayPos, playerForward * 1f, Color.red);
-            }
-
-
-        }
-        else
-        {
-             //draw different color ray
-             Debug.DrawRay(wallRayPos, playerForward* 1f, Color.red);
-        }
-
-//store distance to obstacle
-distanceToObstacke = hit.distance;
-        //Debug.Log("hit distance is: " + distanceToObstacke;
-
-
         //if the player is close to the wall and there is a detected wall
-        if (distanceToObstacke < 1 && objectDetected)
+        if (distanceToObstacke < 1 && wallDetected)
         {
             //Updates player state
-            //isWallrun = true;
+            isWallrun = true;
             canJump = true;
-            Debug.Log("Wall Detected?: " + objectDetected + " Can Jump?: " + canJump);
+            //Debug.Log("Wall Detected?: " + objectDetected + " Can Jump?: " + canJump);
 
-            //move direction while running 
-            Vector3 wallRunDire = Vector3.Cross(hit.normal, Vector3.up);
-
+            //move direction while running (finds the cross vector of the wall)
+            Vector3 wallRunDire = Vector3.Cross(sphereHit.normal, Vector3.up);
+            //Debug.Log("Wall Run Direction is: "+wallRunDire);
 
             //moves player based on direction of approach (left,right,forward)
-            if (objectNormal < 45) // Running along the wall
+            if (objectNormal < 45f) // Running along the wall
             {
                 rb.AddForce(wallRunDire * moveSpeed * 10f, ForceMode.Force);
             }
-            else if (objectNormal < 135) // Climbing
+            else if (objectNormal < 135f) // Climbing
             {
                 rb.AddForce(Vector3.up * moveSpeed * 10f, ForceMode.Force);
             }
@@ -315,6 +271,47 @@ distanceToObstacke = hit.distance;
 
         yield return new WaitForFixedUpdate();
 
+    }
+
+    private void CheckWall()
+    {
+        //Detects if a wall was hit
+        wallDetected = false;
+
+        //Raycast position = player position
+        Vector3 wallRayPos = transform.position;
+
+        //Casts ray if hit result is wall layer
+        if (Physics.SphereCast(wallRayPos, 0.1f, playerForward, out sphereHit, 1f, layerMaskWall, QueryTriggerInteraction.Collide))
+        {
+            //wall was detected
+            wallDetected = true;
+
+            //check for the hit object
+            //Debug.Log("Hit result is " + sphereHit);
+
+            //Get the entry point and calculate the angle of the player
+            dot = Vector3.Dot(playerForward, -sphereHit.normal);
+
+            //Turns dot into degrees
+            objectNormal = Mathf.Acos(dot) * Mathf.Rad2Deg;
+            Debug.Log("Angle entry: " + dot);
+
+            //Debug.Log("Wall detected");
+
+            //draw ray for debugging
+            Debug.DrawRay(wallRayPos, playerForward * 1f, Color.green);
+
+        }
+        else
+        {
+            //draw different color ray
+            Debug.DrawRay(wallRayPos, playerForward * 1f, Color.red);
+        }
+
+        //store distance to obstacle
+        distanceToObstacke = sphereHit.distance;
+        //Debug.Log("hit distance is: " + distanceToObstacke;
     }
     //---------------------------Ground Check------------------//
     private void groundCheck()

@@ -5,11 +5,11 @@ public class HeadBib : MonoBehaviour
 {
     Rigidbody rb;
     [SerializeField]//[Range(1f, 30f)]
-    float frequency = 10.0f;
+    float frequency = 18.0f;
     [SerializeField]//[Range(0.01f, 1.3f)]
-    float Amplitude = 0.08f;
+    float Amplitude = 1f;
     [SerializeField]//[Range(10f, 100f)]
-    float INTERspeed = 10.0f;
+    float INTERspeed = 20.0f;
 
     [SerializeField]Camera camHold;
 
