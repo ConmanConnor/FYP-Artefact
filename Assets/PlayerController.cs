@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Linq;
 using Unity.VisualScripting;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
 using UnityEngine.UIElements;
 
 public class PlayerController : MonoBehaviour
@@ -65,7 +67,6 @@ public class PlayerController : MonoBehaviour
     Vector3 directionOfPlayer;
     Vector3 playerForward;
 
-
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -103,12 +104,13 @@ public class PlayerController : MonoBehaviour
 
         CheckWall();
 
+        
         if(wallDetected)
         {
             wallrunActive = StartCoroutine(WallRun());
 
         }
-       
+        
 
         transform.rotation = playerRotation;
 
@@ -159,12 +161,10 @@ public class PlayerController : MonoBehaviour
     private void JumpPerformed(InputAction.CallbackContext context)
     {
         Jump();
-        //wallrunActive = StartCoroutine(WallRun());
         
     }
     private void JumpCancelled(InputAction.CallbackContext context)
     {
-       //StopCoroutine(WallRun());
     }
 
     private void Jump()
@@ -238,8 +238,6 @@ public class PlayerController : MonoBehaviour
 
     IEnumerator WallRun()
     {
-        //Holds a list of directions
-        Vector3 directions = playerDire;
 
         //if the player is close to the wall and there is a detected wall
         if (distanceToObstacke < 1 && wallDetected)
@@ -254,17 +252,17 @@ public class PlayerController : MonoBehaviour
             //Debug.Log("Wall Run Direction is: "+wallRunDire);
 
             //moves player based on direction of approach (left,right,forward)
-            if (wallNormal < 45f) // Running along the wall
+            if (dot < 45f) // Running along the wall
             {
-                rb.AddForce(wallRunDire * moveSpeed * 10f, ForceMode.Force);
+                //rb.AddForce(wallRunDire * moveSpeed * 10f, ForceMode.Force);
             }
-            else if (wallNormal < 135f) // Climbing
+            else if (dot < 135f) // Climbing
             {
-                rb.AddForce(Vector3.up * moveSpeed * 10f, ForceMode.Force);
+                //rb.AddForce(Vector3.up * moveSpeed * 10f, ForceMode.Force);
             }
             else // Opposite wall-run direction
             {
-                rb.AddForce(-wallRunDire * moveSpeed * 10f, ForceMode.Force);
+                //rb.AddForce(-wallRunDire * moveSpeed * 10f, ForceMode.Force);
             }
         }
         else
@@ -284,32 +282,41 @@ public class PlayerController : MonoBehaviour
         //Raycast position = player position
         Vector3 wallRayPos = transform.position;
 
-        //Casts ray if hit result is wall layer
-        if (Physics.SphereCast(wallRayPos, 0.1f, playerForward, out sphereHit, 1f, layerMaskWall, QueryTriggerInteraction.Collide))
+        Vector3[] playerFeelerDire = { transform.right.normalized, -transform.right.normalized,playerForward.normalized, (playerForward + -transform.right).normalized, (transform.forward + transform.right).normalized};
+
+        
+        foreach (Vector3 playerFeeler in  playerFeelerDire)
         {
-            //wall was detected
-            wallDetected = true;
+            
+            //Casts ray if hit result is wall layer
+            if (Physics.Raycast(wallRayPos, playerFeeler, out sphereHit, 3f, layerMaskWall))
+            {
 
-            //check for the hit object
-            //Debug.Log("Hit result is " + sphereHit);
+                //wall was detected
+                wallDetected = true;
+               
+                
+                //check for the hit object
+                //Debug.Log("Hit result is " + sphereHit);
 
-            //Get the entry point and calculate the angle of the player
-            dot = Vector3.Dot(playerForward, -sphereHit.normal);
+                //Get the entry point and calculate the angle of the player
+                dot = Vector3.Angle(playerForward, sphereHit.normal);
 
-            //Turns dot into degrees
-            wallNormal = Mathf.Acos(dot) * Mathf.Rad2Deg;
-            Debug.Log("Angle entry: " + dot);
+                //Turns dot into degrees
+                //wallNormal = Mathf.Acos(dot) * Mathf.Rad2Deg;
+                Debug.Log("Angle entry: " + dot);
 
-            //Debug.Log("Wall detected");
+                //Debug.Log("Wall detected");
 
-            //draw ray for debugging
-            Debug.DrawRay(wallRayPos, playerForward * 1f, Color.green);
+                //draw ray for debugging
+                Debug.DrawRay(wallRayPos, playerFeeler * 1f, Color.green);
 
-        }
-        else
-        {
-            //draw different color ray
-            Debug.DrawRay(wallRayPos, playerForward * 1f, Color.red);
+            }
+            else
+            {
+                //draw different color ray
+                Debug.DrawRay(wallRayPos, playerFeeler * 1f, Color.red);
+            }
         }
 
         //store distance to obstacle
