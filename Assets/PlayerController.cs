@@ -107,6 +107,8 @@ public class PlayerController : MonoBehaviour
             playerRotation.x = 0;
             playerRotation.z = 0;
             transform.rotation = playerRotation;
+
+            rb.useGravity = true;
         }
 
 
@@ -225,7 +227,7 @@ public class PlayerController : MonoBehaviour
     {
 
         //if the player is close to the wall and there is a detected wall
-        if (distanceToObstacke < 1f)
+        if (distanceToObstacke < 1f && !isGrounded)
         {
             //Updates player state
             isWallrun = true;
@@ -244,20 +246,23 @@ public class PlayerController : MonoBehaviour
             Debug.Log(wallRelevantDot);
             if (forwardDot < -0.5f)
             {
-                rb.AddForce(Vector3.up * moveSpeed * 10f, ForceMode.Force);
+                rb.AddForce(Vector3.up * moveSpeed * 2f, ForceMode.Force);
+                rb.useGravity = false;
             }
             else 
             {
                 //moves player based on direction of approach (left,right,forward)
-                if (wallRelevantDot < 0f) // Running along the wall
+                if (wallRelevantDot < 0f) 
                 {
-                    Debug.Log("Banana");
-                    rb.AddForce(-wallRunDire * moveSpeed * 10f, ForceMode.Force);
+                    //Debug.Log("Banana");
+                    rb.AddForce(-wallRunDire * moveSpeed * 2f, ForceMode.Force);
+                    rb.useGravity = false;
                 }
                 else if (wallRelevantDot > 0f)
                 {
-                    Debug.Log("Apple");
-                    rb.AddForce(wallRunDire * moveSpeed * 10f, ForceMode.Force);
+                    //Debug.Log("Apple");
+                    rb.AddForce(wallRunDire * moveSpeed * 2f, ForceMode.Force);
+                    rb.useGravity = false;
                 }
             }
         }
@@ -321,53 +326,13 @@ public class PlayerController : MonoBehaviour
             Debug.DrawRay(wallRayPos, transform.forward * 10f, Color.red);
         }
 
-
-
-        /*
-
-        foreach (Vector3 playerFeeler in  playerFeelerDire)
-        {
-            
-            //Casts ray if hit result is wall layer
-            if (Physics.Raycast(wallRayPos, playerFeeler, out sphereHit, 1f, layerMaskWall))
-            {
-
-                //wall was detected
-                wallDetected = true;
-               
-                
-                //check for the hit object
-                //Debug.Log("Hit result is " + sphereHit);
-
-                //Get the entry point and calculate the angle of the player
-                wallRight = Vector3.Cross( sphereHit.normal, Vector3.up);
-
-                wallDot = Vector3.Dot(wallRight, playerForward);
-                //Debug.Log("Dot entry: " + wallDot);
-
-                //Get the orthogonal axis
-                dot = Vector3.Dot(sphereHit.normal, Vector3.up);
-
-                //Turns orthagonal axis into angle
-                wallNormal = Mathf.Acos(dot) * Mathf.Rad2Deg;
-
-                //Debug.Log("Wall detected");
-
-                //draw ray for debugging
-                Debug.DrawRay(wallRayPos, playerFeeler * 1f, Color.green);
-
-            }
-            else
-            {
-                //draw different color ray
-                Debug.DrawRay(wallRayPos, playerFeeler * 1f, Color.red);
-            }
-        }
-        */
         //store distance to obstacle
         distanceToObstacke = Mathf.Infinity;
+
+        //Checking each collider around the player
         foreach (Collider col in Physics.OverlapSphere(transform.position, 3f, layerMaskWall))
         {
+            //Find the distance between the player and the closest point to the wall
             if(Vector3.Distance(transform.position, col.ClosestPoint(transform.position)) < distanceToObstacke)
             {
                 distanceToObstacke = Vector3.Distance(transform.position, col.ClosestPoint(transform.position));
