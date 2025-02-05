@@ -47,6 +47,7 @@ public class PlayerController : MonoBehaviour
     float distanceToObstacke;
     float dot;
     float wallNormal;
+    float wallANgle;
     
    
 
@@ -101,11 +102,8 @@ public class PlayerController : MonoBehaviour
         var playerRotation = playerCamera.transform.rotation;
         playerRotation.x = 0;
         playerRotation.z = 0;
-
-        CheckWall();
-
         
-        if(wallDetected)
+        if(wallDetected && wallNormal == 0)
         {
             wallrunActive = StartCoroutine(WallRun());
 
@@ -126,34 +124,15 @@ public class PlayerController : MonoBehaviour
         {
             canJump = true;
         }
-        /*
-        if (isWallrun)
-        {
-            
-            //Tiks down the wall time to make sure you cant infinitely wall run
-            
-            maxWallTime -= Time.deltaTime;
-            Debug.Log(maxWallTime);
-            if(maxWallTime <= 0)
-            {
-                rb.linearVelocity = Vector3.zero;
-                rb.useGravity = true;
-                isWallrun = false;
-                return;
-            }
-            else
-            {
-                maxWallTime = 0.1f;
-            }
-        }*/
-
-
-        //WallRun();
     }
+
     void Update()
     {
         groundCheck();
-        
+
+
+        CheckWall(); 
+
     }
 
     //----------------------------Movement Mechanics----------------------------//
@@ -240,7 +219,7 @@ public class PlayerController : MonoBehaviour
     {
 
         //if the player is close to the wall and there is a detected wall
-        if (distanceToObstacke < 1 && wallDetected)
+        if (distanceToObstacke < 1)
         {
             //Updates player state
             isWallrun = true;
@@ -252,11 +231,11 @@ public class PlayerController : MonoBehaviour
             //Debug.Log("Wall Run Direction is: "+wallRunDire);
 
             //moves player based on direction of approach (left,right,forward)
-            if (dot < 45f) // Running along the wall
+            if (wallANgle < 45f) // Running along the wall
             {
                 //rb.AddForce(wallRunDire * moveSpeed * 10f, ForceMode.Force);
             }
-            else if (dot < 135f) // Climbing
+            else if (wallANgle < 135f) // Climbing
             {
                 //rb.AddForce(Vector3.up * moveSpeed * 10f, ForceMode.Force);
             }
@@ -289,7 +268,7 @@ public class PlayerController : MonoBehaviour
         {
             
             //Casts ray if hit result is wall layer
-            if (Physics.Raycast(wallRayPos, playerFeeler, out sphereHit, 3f, layerMaskWall))
+            if (Physics.Raycast(wallRayPos, playerFeeler, out sphereHit, 1f, layerMaskWall))
             {
 
                 //wall was detected
@@ -300,11 +279,14 @@ public class PlayerController : MonoBehaviour
                 //Debug.Log("Hit result is " + sphereHit);
 
                 //Get the entry point and calculate the angle of the player
-                dot = Vector3.Angle(playerForward, sphereHit.normal);
+                wallANgle = Vector3.Angle( sphereHit.normal, playerForward);
+                Debug.Log("Angle entry: " + wallANgle);
 
-                //Turns dot into degrees
-                //wallNormal = Mathf.Acos(dot) * Mathf.Rad2Deg;
-                Debug.Log("Angle entry: " + dot);
+                //Get the orthaganol axis
+                dot = Vector3.Dot(sphereHit.normal, Vector3.up);
+
+                //Turns orthagonal axis into angle
+                wallNormal = Mathf.Acos(dot) * Mathf.Rad2Deg;
 
                 //Debug.Log("Wall detected");
 
