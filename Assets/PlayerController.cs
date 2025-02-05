@@ -36,6 +36,7 @@ public class PlayerController : MonoBehaviour
     public bool isMoving;
     public bool isWallrun;
     public bool canJump;
+    bool jumpPressed;
     [SerializeField] public bool isGrounded;
     bool wallDetected;
    
@@ -117,8 +118,10 @@ public class PlayerController : MonoBehaviour
             wallrunActive = StartCoroutine(WallRun());
 
         }
-        
-
+        else
+        {
+            isWallrun = false;
+        }
 
         directionOfPlayer = rb.linearVelocity.normalized;
 
@@ -157,11 +160,12 @@ public class PlayerController : MonoBehaviour
     private void Jump()
     {
         //checks if player is grounded
-        if(isGrounded && canJump)
+        if(canJump)
         {
             //Adds upward force
             rb.AddForce(Vector3.up * jumpForce * 10f, ForceMode.Impulse);
             //Debug.Log("Jumpy");
+            jumpPressed = true;
         }
         
     }
@@ -227,7 +231,7 @@ public class PlayerController : MonoBehaviour
     {
 
         //if the player is close to the wall and there is a detected wall
-        if (distanceToObstacke < 1f && !isGrounded)
+        if (distanceToObstacke < 1f && jumpPressed)
         {
             //Updates player state
             isWallrun = true;
@@ -246,7 +250,7 @@ public class PlayerController : MonoBehaviour
             Debug.Log(wallRelevantDot);
             if (forwardDot < -0.5f)
             {
-                rb.AddForce(Vector3.up * moveSpeed * 2f, ForceMode.Force);
+                rb.AddForce(Vector3.up * moveSpeed * 5f, ForceMode.Force);
                 rb.useGravity = false;
             }
             else 
@@ -255,20 +259,16 @@ public class PlayerController : MonoBehaviour
                 if (wallRelevantDot < 0f) 
                 {
                     //Debug.Log("Banana");
-                    rb.AddForce(-wallRunDire * moveSpeed * 2f, ForceMode.Force);
+                    rb.AddForce(-wallRunDire * moveSpeed * 5f, ForceMode.Force);
                     rb.useGravity = false;
                 }
                 else if (wallRelevantDot > 0f)
                 {
                     //Debug.Log("Apple");
-                    rb.AddForce(wallRunDire * moveSpeed * 2f, ForceMode.Force);
+                    rb.AddForce(wallRunDire * moveSpeed * 5f, ForceMode.Force);
                     rb.useGravity = false;
                 }
             }
-        }
-        else
-        {
-            isWallrun = false;
         }
 
         yield return new WaitForFixedUpdate();
@@ -310,6 +310,7 @@ public class PlayerController : MonoBehaviour
 
             //Get the orthogonal axis
             dot = Vector3.Dot(sphereHit.normal, Vector3.up);
+            Debug.Log(dot);
 
             //Turns orthagonal axis into angle
             wallNormal = Mathf.Acos(dot) * Mathf.Rad2Deg;
@@ -348,7 +349,7 @@ public class PlayerController : MonoBehaviour
     private void groundCheck()
     {
         //Draws ray 
-        if(Physics.Raycast(playerFeet.transform.position, transform.TransformDirection(Vector3.down),out hit, 0.5f,layerMaskGround))
+        if(Physics.Raycast(playerFeet.transform.position, transform.TransformDirection(Vector3.down),out hit, 0.5f))
         {
             //player is grounded
             isGrounded = true;
