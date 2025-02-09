@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Linq;
 using Unity.VisualScripting;
@@ -8,76 +9,107 @@ using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
 using UnityEngine.UIElements;
 
+public enum PlayerState
+{
+    Idle,
+    Moving,
+    WallRun,
+    Climb,
+    Vault,
+    Falling,
+    Jumping
+}
+
 public class PlayerController : MonoBehaviour
 {
+    //-----------------------Scipt References-----------------------------//
+    ParkourDecider decider;
+
+    ParkourMover parkourMover;
+
     //------------------------RigidBody/Player components--------------------//
-   Rigidbody rb;
+    [Header("Rigidbody Components")]
+    public Rigidbody rb;
     PlayerController playerCTR;
-  
-   
+
+
     //-----------------------------Ogres have Layers---------//
-   [SerializeField] LayerMask layerMaskGround;
-   [SerializeField] LayerMask layerMaskWall;
+    [SerializeField] LayerMask layerMaskGround;
+ 
 
     //-----------------------Transform(noAutobots)---------//
-   [SerializeField]Transform playerFeet;
-   [SerializeField]Transform playerHead;
+    [SerializeField] Transform playerFeet;
+    [SerializeField] Transform playerHead;
 
     //-----------RayCast-------------------->
     RaycastHit hit;
-    RaycastHit sphereHit;
 
-   
+
+
     //--------------------Coroutine---------------//
     Coroutine movePlayer;
-    Coroutine wallrunActive;
+
+    Coroutine playerJump;
+
+    Coroutine wallRunRoutine;
+
+    Coroutine climbRunRoutine;
+
+
 
     //-----------------Bools-----------------------//
+    [Header("Boolean Checks")]
     public bool isMoving;
-    public bool isWallrun;
     public bool canJump;
-    bool jumpPressed;
+    public bool jumpPressed;
     [SerializeField] public bool isGrounded;
-    bool wallDetected;
-   
+    public bool isFalling = false;
+
+
 
     //-----------------floats----------------------//
-    float maxWallTime = 10f;
-    [SerializeField] float moveSpeed;
+    [Header("Float Values")]
+    [SerializeField] public float moveSpeed;
     [SerializeField] float jumpForce;
-    float distanceToObstacke;
-    float dot;
-    float wallNormal;
-    float wallDot;
-    Vector3 wallRight;
-
-
+    public float fallingThreshold = -5f;
 
     //-------------Inputs--------------------------//
+    [Header("Input Components")]
     Vector2 InputMove;
+
+    float InputJump;
 
     PlayerInput playerInput;
 
     //-----------------Aninimation----------------//
+    [Header("Animation")]
     Animator Animator;
 
     //------------------Camera--------------------//
+    [Header("Player Camera")]
     Camera playerCamera;
 
+    //------------------Player Stae---------------------//
+    [Header("Finite State Machine")]
+    [SerializeField] public PlayerState currentState;
+
     //-----------------------Vectors------------------//
-    Vector3 playerDire;
+    [Header("Player Vectors")]
+    public Vector3 playerDire;
     Vector3 hitAngleCross;
     Vector3 directionOfPlayer;
-    Vector3 playerForward;
-  
+    public Vector3 playerForward;
 
-    void Awake()
+void Awake()
     {
         rb = GetComponent<Rigidbody>();
         playerInput = GetComponent<PlayerInput>();
         playerCamera = Camera.main;
         Animator = GetComponent<Animator>();
         playerCTR = GetComponent<PlayerController>();
+
+        decider = GetComponent<ParkourDecider>();
+        parkourMover = GetComponent<ParkourMover>();
 
     }
     private void OnEnable()
@@ -101,73 +133,136 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (!isWallrun)
+        if (!decider.isWallrun || !decider.isClimbing)
         {
             //rotates the player to match the camera without following the z and x axis 
             var playerRotation = playerCamera.transform.rotation;
             playerRotation.x = 0;
             playerRotation.z = 0;
             transform.rotation = playerRotation;
-
-            rb.useGravity = true;
         }
 
-
-        if (wallDetected)
-        {
-            wallrunActive = StartCoroutine(WallRun());
-
-        }
-        else
-        {
-            isWallrun = false;
-        }
+        rb.useGravity = true;
+        
+        //Checks if the player is not moving
+        if(currentState != PlayerState.Jumping && rb.linearVelocity.magnitude <= 0.1f  && isGrounded) { currentState = PlayerState.Idle; }
+        else if(currentState != PlayerState.Jumping && rb.linearVelocity.magnitude >= 0.1f && isGrounded) { currentState = PlayerState.Moving; }
 
         directionOfPlayer = rb.linearVelocity.normalized;
 
         playerForward = transform.forward.normalized;
-
-        if (!isGrounded && !isWallrun)
-        {
-            canJump = false;
-        }
-        else
-        {
-            canJump = true;
-        }
     }
 
     void Update()
     {
         groundCheck();
 
+        FallCheck();
 
-        CheckWall(); 
+        CheckPlayerState();
 
+    }
+
+    private void CheckPlayerState()
+    {
+
+        switch(currentState)
+        {
+            case PlayerState.Idle:
+                StopCoroutine(Move());
+                break;
+
+            case PlayerState.Moving:
+                if (movePlayer == null)
+                {
+                    movePlayer = StartCoroutine(Move());
+                }
+                else
+                {
+                    StopCoroutine(movePlayer);
+                    movePlayer = null;
+                    movePlayer = StartCoroutine(Move());
+                }
+                break;
+
+            case PlayerState.Jumping:
+                if (playerJump != null)
+                {
+                    StopCoroutine(Jump());
+                    playerJump = null;
+                }
+                break;
+
+            case PlayerState.Falling:
+                isFalling = true;
+                break;
+
+            case PlayerState.WallRun:
+                if (wallRunRoutine == null)
+                {
+                   wallRunRoutine = StartCoroutine(parkourMover.WallRun());
+                }
+                break;
+
+            case PlayerState.Climb:
+                if (climbRunRoutine == null)
+                {
+                    climbRunRoutine = StartCoroutine(parkourMover.Climb());
+                }
+                break;
+
+            case PlayerState.Vault: 
+                break;
+
+            default: 
+                break;
+        }
     }
 
     //----------------------------Movement Mechanics----------------------------//
 
     private void JumpPerformed(InputAction.CallbackContext context)
     {
-        Jump();
-        
+      
+        InputJump = context.ReadValue<float>();
+        //Set state to player moving
+        jumpPressed = true;
+
+        if (playerJump == null)
+        {
+            playerJump = StartCoroutine(Jump());
+        }
+
+
     }
     private void JumpCancelled(InputAction.CallbackContext context)
     {
+        
+        InputJump = context.ReadValue<float>();
+        jumpPressed = false;
     }
 
-    private void Jump()
+    private IEnumerator Jump()
     {
         //checks if player is grounded
-        if(canJump)
+        if(canJump )
         {
+             currentState = PlayerState.Jumping;
             //Adds upward force
             rb.AddForce(Vector3.up * jumpForce * 10f, ForceMode.Impulse);
-            //Debug.Log("Jumpy");
-            jumpPressed = true;
+            Debug.Log("Jumpy");
+            yield return new WaitForFixedUpdate();
         }
         
+    }
+
+    private void FallCheck()
+    {
+        if(rb.linearVelocity.y < fallingThreshold)
+        {
+            currentState = PlayerState.Falling;
+        }
+        else { isFalling = false;}
     }
 
 
@@ -180,10 +275,11 @@ public class PlayerController : MonoBehaviour
         {
             //Player is now moving
             isMoving = true;
-            //Start the coroutine to move player
-            movePlayer = StartCoroutine(Move());
 
-            while(isMoving)
+            //Set state to player moving
+            currentState = PlayerState.Moving;
+
+            while (isMoving)
             {
                 Animator.Play("Running");
                 return;
@@ -200,8 +296,10 @@ public class PlayerController : MonoBehaviour
         {
             //player not moving
             isMoving = false;
-            //stop coroutine
+
+            //Stop in here aswell incase player is holding button in other states
             StopCoroutine(Move());
+
             //Couroutine is now null 
             movePlayer = null;
 
@@ -216,7 +314,7 @@ public class PlayerController : MonoBehaviour
             Vector3 movedirection = playerHead.forward * InputMove.y + playerHead.right * InputMove.x;
             //Adds force to player
             rb.AddForce(movedirection.normalized * moveSpeed * 10f, ForceMode.Force);
-            
+
             yield return new WaitForFixedUpdate();
         }
         //Plays run animation
@@ -227,124 +325,6 @@ public class PlayerController : MonoBehaviour
         
     }
 
-    IEnumerator WallRun()
-    {
-
-        //if the player is close to the wall and there is a detected wall
-        if (distanceToObstacke < 1f && jumpPressed)
-        {
-            //Updates player state
-            isWallrun = true;
-            canJump = true;
-            //Debug.Log("Wall Detected?: " + objectDetected + " Can Jump?: " + canJump);
-
-            //move direction while running (finds the cross vector of the wall)
-            Vector3 wallRunDire = Vector3.Cross(sphereHit.normal, Vector3.up);
-            //Debug.Log("Wall Run Direction is: "+wallRunDire);
-
-            //check if player is approaching the wall
-            float forwardDot = Vector3.Dot(playerForward,sphereHit.normal);
-
-            float wallRelevantDot = Vector3.Dot(wallRunDire, playerForward);
-
-            Debug.Log(wallRelevantDot);
-            if (forwardDot < -0.5f)
-            {
-                rb.AddForce(Vector3.up * moveSpeed * 5f, ForceMode.Force);
-                rb.useGravity = false;
-            }
-            else 
-            {
-                //moves player based on direction of approach (left,right,forward)
-                if (wallRelevantDot < 0f) 
-                {
-                    //Debug.Log("Banana");
-                    rb.AddForce(-wallRunDire * moveSpeed * 5f, ForceMode.Force);
-                    rb.useGravity = false;
-                }
-                else if (wallRelevantDot > 0f)
-                {
-                    //Debug.Log("Apple");
-                    rb.AddForce(wallRunDire * moveSpeed * 5f, ForceMode.Force);
-                    rb.useGravity = false;
-                }
-            }
-        }
-
-        yield return new WaitForFixedUpdate();
-
-    }
-
-    private void CheckWall()
-    {
-        //Detects if a wall was hit
-        wallDetected = false;
-
-        //Raycast position = player position
-        Vector3 wallRayPos = transform.position;
-
-        Vector3[] playerFeelerDire = 
-            { 
-            playerForward.normalized,
-            (playerForward + -transform.right).normalized,
-            (transform.forward + transform.right).normalized,
-            transform.right.normalized,
-            -transform.right.normalized,
-            };
-
-        if(Physics.Raycast(wallRayPos, transform.forward, out sphereHit, 10f, layerMaskWall))
-            {
-
-            //wall was detected
-            wallDetected = true;
-
-
-            //check for the hit object
-            //Debug.Log("Hit result is " + sphereHit);
-
-            //Get the entry point and calculate the angle of the player
-            wallRight = Vector3.Cross(sphereHit.normal, Vector3.up);
-
-            wallDot = Vector3.Dot(wallRight, playerForward);
-            //Debug.Log("Dot entry: " + wallDot);
-
-            //Get the orthogonal axis
-            dot = Vector3.Dot(sphereHit.normal, Vector3.up);
-            Debug.Log(dot);
-
-            //Turns orthagonal axis into angle
-            wallNormal = Mathf.Acos(dot) * Mathf.Rad2Deg;
-
-            //Debug.Log("Wall detected");
-
-            //draw ray for debugging
-            Debug.DrawRay(wallRayPos, transform.forward * 10f, Color.green);
-
-        }
-            else
-        {
-            //draw different color ray
-            Debug.DrawRay(wallRayPos, transform.forward * 10f, Color.red);
-        }
-
-        //store distance to obstacle
-        distanceToObstacke = Mathf.Infinity;
-
-        //Checking each collider around the player
-        foreach (Collider col in Physics.OverlapSphere(transform.position, 3f, layerMaskWall))
-        {
-            //Find the distance between the player and the closest point to the wall
-            if(Vector3.Distance(transform.position, col.ClosestPoint(transform.position)) < distanceToObstacke)
-            {
-                distanceToObstacke = Vector3.Distance(transform.position, col.ClosestPoint(transform.position));
-            }
-                
-        }
-        
-        //Debug.Log("hit distance is: " + distanceToObstacke;
-    }
-
-
     //---------------------------Ground Check------------------//
     private void groundCheck()
     {
@@ -353,6 +333,8 @@ public class PlayerController : MonoBehaviour
         {
             //player is grounded
             isGrounded = true;
+
+            canJump = true;
            // Debug.Log("Ground");
             Debug.DrawRay(playerFeet.transform.position, transform.TransformDirection(Vector3.down) * hit.distance, Color.green);
         }
@@ -360,8 +342,13 @@ public class PlayerController : MonoBehaviour
         {
             //Player is not grounded
             isGrounded = false;
+
+            canJump = false;
+
             //Debug.Log("No Ground");
             Debug.DrawRay(playerFeet.transform.position, transform.TransformDirection(Vector3.down) * hit.distance, Color.red);
         }
     }
 }
+   
+
