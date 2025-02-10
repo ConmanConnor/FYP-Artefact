@@ -38,12 +38,17 @@ public class ParkourDecider : MonoBehaviour
     public float fallingThreshold = -5f;
     public float InputJump;
 
+    private float stateChangeCoolTime = 0.2f;
+    private float lastStateChangeTime = 0f;
+    private float movementThreshold = 0.15f;
+
     //-----------------------Vectors------------------//
     [Header("Player Vectors")]
     public Vector3 playerDire;
     Vector3 hitAngleCross;
     Vector3 directionOfPlayer;
     public Vector3 playerForward;
+    private PlayerState previousState;
 
     //------------------Player Stae---------------------//
     [Header("Finite State Machine")]
@@ -97,9 +102,10 @@ public class ParkourDecider : MonoBehaviour
     {
         CheckWall();
 
-        //Checks if the player is not moving
-        if (currentState != PlayerState.Jumping && controller.rb.linearVelocity.magnitude <= 0.1f && controller.isGrounded) { currentState = PlayerState.Idle; Debug.Log("Player is Idle"); }
-        else if (currentState != PlayerState.Jumping && controller.rb.linearVelocity.magnitude >= 0.1f && controller.isGrounded ) { currentState = PlayerState.Moving; Debug.Log("Player is Moving"); }
+        //Checks if the player can switch to idle
+        if (CanSwitchToIdle()) { currentState = PlayerState.Idle; Debug.Log("Player is Idle"); }
+        //Checks if the player can switch to moving
+        else if (CanSwitchToMove()) { currentState = PlayerState.Moving; Debug.Log("Player is Moving"); }
 
         if (distanceToWall < 1f && jumpPressed)
         {
@@ -132,7 +138,7 @@ public class ParkourDecider : MonoBehaviour
     {
         FallCheck();
 
-        CheckPlayerState();
+        CheckPlayerState(currentState);
 
         WallisBeside();
 
@@ -195,18 +201,43 @@ public class ParkourDecider : MonoBehaviour
     {
         return Physics.Raycast(controller.transform.position, transform.forward, out _, 1f) ;
     }
-    private void CheckPlayerState()
-    {
 
-        switch (currentState)
+    public bool CanSwitchToMove()
+    {
+        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState && (currentState == PlayerState.Idle)  
+            && controller.rb.linearVelocity.magnitude >= movementThreshold && controller.isGrounded;
+    }
+
+    public bool CanSwitchToIdle()
+    {
+        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState && 
+            controller.rb.linearVelocity.magnitude <= (movementThreshold - 0.05f) && controller.isGrounded;
+    }
+    private void CheckPlayerState(PlayerState newState)
+    {
+        if(currentState != newState)
+        {
+            previousState = currentState;
+            currentState = newState;
+
+            Debug.Log(previousState);
+        }
+
+        switch (newState)
         {
             case PlayerState.Idle:
-                StopCoroutine(parkourMover.Move());
+                lastStateChangeTime = Time.time;
+                if (movePlayer != null)
+                {
+                    StopCoroutine(movePlayer);
+                    movePlayer = null;
+                }
                 break;
 
             case PlayerState.Moving:
                 if(movePlayer == null)
                 {
+                    lastStateChangeTime = Time.time;
                     movePlayer = StartCoroutine(parkourMover.Move());
                 }
                 break;
@@ -223,9 +254,8 @@ public class ParkourDecider : MonoBehaviour
                 break;
 
             case PlayerState.WallRun:
-                 if (wallRunRoutine == null)
+                 if (wallRunRoutine == null && newState != PlayerState.WallRun)
                 {
-                    isWallrun = true;
                     wallRunRoutine = StartCoroutine(parkourMover.WallRun());
                 }
                  else
@@ -237,10 +267,9 @@ public class ParkourDecider : MonoBehaviour
                 break;
 
             case PlayerState.Climb:
-                if(climbRunRoutine == null)
+                if(climbRunRoutine == null && newState != PlayerState.Climb)
                 {
                     climbRunRoutine = StartCoroutine(parkourMover.Climb());
-                    isClimbing = true;
                 }
                 else
                 {
@@ -265,7 +294,7 @@ public class ParkourDecider : MonoBehaviour
 
         InputJump = context.ReadValue<float>();
 
-        Debug.Log("Jump Pressed: " + InputJump);
+        //Debug.Log("Jump Pressed: " + InputJump);
 
         jumpPressed = true;
 
@@ -285,7 +314,7 @@ public class ParkourDecider : MonoBehaviour
 
         InputJump = context.ReadValue<float>();
 
-        Debug.Log("Jump Cancelled: " + InputJump);
+        //Debug.Log("Jump Cancelled: " + InputJump);
 
         if (isFalling)
         {
@@ -326,12 +355,6 @@ public class ParkourDecider : MonoBehaviour
         {
             //player not moving
             isMoving = false;
-
-            //Stop in here aswell incase player is holding button in other states
-            StopCoroutine(parkourMover.Move());
-
-            //Couroutine is now null 
-            movePlayer = null;
 
             controller.rb.linearVelocity = Vector3.zero;
         }

@@ -74,14 +74,6 @@ void Awake()
 
     }
 
-
-    private void FixedUpdate()
-    {
-        rb.useGravity = true;
-
-   
-    }
-
     void Update()
     {
         groundCheck();

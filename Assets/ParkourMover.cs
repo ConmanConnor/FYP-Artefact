@@ -23,7 +23,7 @@ public class ParkourMover : MonoBehaviour
     //----------------------------Movement Mechanics----------------------------//
     public IEnumerator WallRun()
     {
-        Debug.Log("Wallrunning");
+       // Debug.Log("Wallrunning");
      
         
             decider.canJump = true;
@@ -42,13 +42,16 @@ public class ParkourMover : MonoBehaviour
                     //Debug.Log("Banana");
                     controller.rb.AddForce(-wallRunDire * moveSpeed * 10f, ForceMode.Force);
                     controller.rb.useGravity = false;
+                    decider.isWallrun = true;
                 }
+
                 else if (wallRelevantDot > 0f)
                 {
                     //Debug.Log("Apple");
                     controller.rb.AddForce(wallRunDire * moveSpeed * 10f, ForceMode.Force);
                     controller.rb.useGravity = false;
-            }
+                    decider.isWallrun = true;
+                }
          
 
         yield return new WaitForFixedUpdate();
@@ -75,8 +78,9 @@ public class ParkourMover : MonoBehaviour
             if (fDot < -0.5f)
             {
                 controller.rb.AddForce(Vector3.up * moveSpeed * 10f, ForceMode.Force);
+                decider.isClimbing = true;
                 controller.rb.useGravity = false;
-                Debug.Log("Climbing");
+                //Debug.Log("Climbing");
             }
         
 
