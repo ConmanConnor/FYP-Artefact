@@ -1549,10 +1549,8 @@ MonoBehaviour:
   canJump: 0
   jumpPressed: 0
   isGrounded: 0
-  isFalling: 0
   moveSpeed: 1.2
   jumpForce: 1
-  fallingThreshold: -1
   currentState: 0
   playerDire: {x: 0, y: 0, z: 0}
   playerForward: {x: 0, y: 0, z: 0}
@@ -1590,6 +1588,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75e4b1e2d7da62a4492eb9ce0e40e7f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isWallrun: 0
+  isClimbing: 0
+  isFalling: 0
 --- !u!114 &1922013146
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1602,13 +1603,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d8f75a6bf8670f4b9002ffa0f93dd82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isWallrun: 0
   wallDetected: 0
-  isClimbing: 0
+  isFalling: 0
   layerMaskWall:
     serializedVersion: 2
     m_Bits: 64
   distanceToWall: 0
+  fallingThreshold: -1
 --- !u!1 &2076727251
 GameObject:
   m_ObjectHideFlags: 0

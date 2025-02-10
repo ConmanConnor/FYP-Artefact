@@ -15,23 +15,16 @@ public class ParkourMover : MonoBehaviour
     }
     public IEnumerator WallRun()
     {
-
+        Debug.Log("Wallrunning");
         //if the player is close to the wall and there is a detected wall
         if (decider.distanceToWall < 1f && controller.jumpPressed)
         {
-            //Updates player state
-            decider.isWallrun = true;
             controller.canJump = true;
-
-            controller.currentState = PlayerState.WallRun;
             //Debug.Log("Wall Detected?: " + objectDetected + " Can Jump?: " + canJump);
 
             //move direction while running (finds the cross vector of the wall)
             Vector3 wallRunDire = Vector3.Cross(decider.Hit.normal, Vector3.up);
             //Debug.Log("Wall Run Direction is: "+wallRunDire);
-
-            //check if player is approaching the wall
-            float forwardDot = Vector3.Dot(controller.playerForward, decider.Hit.normal);
 
             float wallRelevantDot = Vector3.Dot(wallRunDire, controller.playerForward);
 
@@ -60,8 +53,6 @@ public class ParkourMover : MonoBehaviour
         //if the player is close to the wall and there is a detected wall
         if (decider.distanceToWall < 1f && controller.jumpPressed)
         {
-            //Updates player state
-            decider.isClimbing = true;
             controller.canJump = false;
             //Debug.Log("Wall Detected?: " + objectDetected + " Can Jump?: " + canJump);
 
@@ -70,16 +61,16 @@ public class ParkourMover : MonoBehaviour
             //Debug.Log("Wall Run Direction is: "+wallRunDire);
 
             //check if player is approaching the wall
-            float forwardDot = Vector3.Dot(controller.playerForward, decider.Hit.normal);
+            float fDot = Vector3.Dot(controller.playerForward, decider.Hit.normal);
 
-            float wallRelevantDot = Vector3.Dot(wallRunDire, controller.playerForward);
+            float wallRelDot = Vector3.Dot(wallRunDire, controller.playerForward);
 
-            Debug.Log(wallRelevantDot);
-            if (forwardDot < -0.5f)
+            Debug.Log(wallRelDot);
+            if (fDot < -0.5f)
             {
                 controller.rb.AddForce(Vector3.up * controller.moveSpeed * 5f, ForceMode.Force);
                 controller.rb.useGravity = false;
-                controller.currentState = PlayerState.Climb;
+                Debug.Log("Climbing");
             }
         }
 

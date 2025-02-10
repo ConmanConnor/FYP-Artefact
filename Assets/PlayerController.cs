@@ -6,6 +6,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.XR;
 using UnityEngine.Rendering;
 using UnityEngine.UIElements;
 
@@ -23,9 +24,10 @@ public enum PlayerState
 public class PlayerController : MonoBehaviour
 {
     //-----------------------Scipt References-----------------------------//
-    ParkourDecider decider;
 
     ParkourMover parkourMover;
+
+    ParkourDecider decider;
 
     //------------------------RigidBody/Player components--------------------//
     [Header("Rigidbody Components")]
@@ -47,13 +49,10 @@ public class PlayerController : MonoBehaviour
 
 
     //--------------------Coroutine---------------//
-    Coroutine movePlayer;
+    [Header("Coroutines")]
+    public Coroutine movePlayer;
 
-    Coroutine playerJump;
-
-    Coroutine wallRunRoutine;
-
-    Coroutine climbRunRoutine;
+    public Coroutine playerJump;
 
 
 
@@ -63,7 +62,7 @@ public class PlayerController : MonoBehaviour
     public bool canJump;
     public bool jumpPressed;
     [SerializeField] public bool isGrounded;
-    public bool isFalling = false;
+  
 
 
 
@@ -71,7 +70,6 @@ public class PlayerController : MonoBehaviour
     [Header("Float Values")]
     [SerializeField] public float moveSpeed;
     [SerializeField] float jumpForce;
-    public float fallingThreshold = -5f;
 
     //-------------Inputs--------------------------//
     [Header("Input Components")]
@@ -87,7 +85,7 @@ public class PlayerController : MonoBehaviour
 
     //------------------Camera--------------------//
     [Header("Player Camera")]
-    Camera playerCamera;
+    public Camera playerCamera;
 
     //------------------Player Stae---------------------//
     [Header("Finite State Machine")]
@@ -107,9 +105,8 @@ void Awake()
         playerCamera = Camera.main;
         Animator = GetComponent<Animator>();
         playerCTR = GetComponent<PlayerController>();
-
-        decider = GetComponent<ParkourDecider>();
         parkourMover = GetComponent<ParkourMover>();
+        decider = GetComponent<ParkourDecider>();
 
     }
     private void OnEnable()
@@ -133,20 +130,7 @@ void Awake()
 
     private void FixedUpdate()
     {
-        if (!decider.isWallrun || !decider.isClimbing)
-        {
-            //rotates the player to match the camera without following the z and x axis 
-            var playerRotation = playerCamera.transform.rotation;
-            playerRotation.x = 0;
-            playerRotation.z = 0;
-            transform.rotation = playerRotation;
-        }
-
         rb.useGravity = true;
-        
-        //Checks if the player is not moving
-        if(currentState != PlayerState.Jumping && rb.linearVelocity.magnitude <= 0.1f  && isGrounded) { currentState = PlayerState.Idle; }
-        else if(currentState != PlayerState.Jumping && rb.linearVelocity.magnitude >= 0.1f && isGrounded) { currentState = PlayerState.Moving; }
 
         directionOfPlayer = rb.linearVelocity.normalized;
 
@@ -156,68 +140,9 @@ void Awake()
     void Update()
     {
         groundCheck();
-
-        FallCheck();
-
-        CheckPlayerState();
-
     }
 
-    private void CheckPlayerState()
-    {
-
-        switch(currentState)
-        {
-            case PlayerState.Idle:
-                StopCoroutine(Move());
-                break;
-
-            case PlayerState.Moving:
-                if (movePlayer == null)
-                {
-                    movePlayer = StartCoroutine(Move());
-                }
-                else
-                {
-                    StopCoroutine(movePlayer);
-                    movePlayer = null;
-                    movePlayer = StartCoroutine(Move());
-                }
-                break;
-
-            case PlayerState.Jumping:
-                if (playerJump != null)
-                {
-                    StopCoroutine(Jump());
-                    playerJump = null;
-                }
-                break;
-
-            case PlayerState.Falling:
-                isFalling = true;
-                break;
-
-            case PlayerState.WallRun:
-                if (wallRunRoutine == null)
-                {
-                   wallRunRoutine = StartCoroutine(parkourMover.WallRun());
-                }
-                break;
-
-            case PlayerState.Climb:
-                if (climbRunRoutine == null)
-                {
-                    climbRunRoutine = StartCoroutine(parkourMover.Climb());
-                }
-                break;
-
-            case PlayerState.Vault: 
-                break;
-
-            default: 
-                break;
-        }
-    }
+   
 
     //----------------------------Movement Mechanics----------------------------//
 
@@ -226,7 +151,7 @@ void Awake()
       
         InputJump = context.ReadValue<float>();
         //Set state to player moving
-        jumpPressed = true;
+       
 
         if (playerJump == null)
         {
@@ -239,10 +164,9 @@ void Awake()
     {
         
         InputJump = context.ReadValue<float>();
-        jumpPressed = false;
     }
 
-    private IEnumerator Jump()
+    public IEnumerator Jump()
     {
         //checks if player is grounded
         if(canJump )
@@ -250,20 +174,13 @@ void Awake()
              currentState = PlayerState.Jumping;
             //Adds upward force
             rb.AddForce(Vector3.up * jumpForce * 10f, ForceMode.Impulse);
-            Debug.Log("Jumpy");
+            //Debug.Log("Jumpy");
             yield return new WaitForFixedUpdate();
         }
         
     }
 
-    private void FallCheck()
-    {
-        if(rb.linearVelocity.y < fallingThreshold)
-        {
-            currentState = PlayerState.Falling;
-        }
-        else { isFalling = false;}
-    }
+  
 
 
     private void MovePerformed(InputAction.CallbackContext context)
@@ -306,7 +223,7 @@ void Awake()
             rb.linearVelocity = Vector3.zero;
         }
     }
-    IEnumerator  Move()
+    public IEnumerator  Move()
     {
         while (isMoving)
         {
