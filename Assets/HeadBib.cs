@@ -13,7 +13,8 @@ public class HeadBib : MonoBehaviour
 
     [SerializeField]Camera camHold;
 
-    PlayerController playerController;
+    ParkourDecider decider;
+    PlayerController controller;
 
     Vector3 originPos;
 
@@ -21,7 +22,7 @@ public class HeadBib : MonoBehaviour
     {
         rb = GameObject.FindGameObjectWithTag("Player").GetComponent<Rigidbody>();
         originPos = transform.localPosition;
-        playerController = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>();
+        decider = GameObject.FindGameObjectWithTag("Player").GetComponent<ParkourDecider>();
         camHold = this.GetComponentInChildren<Camera>();
 
         originPos = transform.localPosition;
@@ -39,7 +40,7 @@ public class HeadBib : MonoBehaviour
         float movementMagnitude = new Vector3(rb.linearVelocity.x, rb.linearVelocity.y).magnitude;
         //Debug.Log(movementMagnitude);
 
-        if (playerController.isMoving && playerController.isGrounded)
+        if (decider.isMoving && controller.isGrounded)
         {
             StartBob();
         }

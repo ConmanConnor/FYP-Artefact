@@ -1,6 +1,8 @@
 using System.Text;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.XR;
+using static UnityEngine.EventSystems.StandaloneInputModule;
 
 public class ParkourDecider : MonoBehaviour
 {
@@ -12,12 +14,16 @@ public class ParkourDecider : MonoBehaviour
 
     Coroutine climbRunRoutine;
 
+
     //------------Booleans----------------------//
     [Header("Boolean Checks")]
     public bool wallDetected;
     public bool isFalling = false;
     public bool isWallrun = false;
     public bool isClimbing = false;
+    public bool isMoving;
+    public bool canJump;
+    public bool jumpPressed;
 
     //------------Raycast Hits----------------------//
     public RaycastHit Hit;
@@ -30,14 +36,60 @@ public class ParkourDecider : MonoBehaviour
     [Header("Float Values")]
     public float distanceToWall;
     public float fallingThreshold = -5f;
+    public float InputJump;
+
+    //-----------------------Vectors------------------//
+    [Header("Player Vectors")]
+    public Vector3 playerDire;
+    Vector3 hitAngleCross;
+    Vector3 directionOfPlayer;
+    public Vector3 playerForward;
+
+    //------------------Player Stae---------------------//
+    [Header("Finite State Machine")]
+    [SerializeField] public PlayerState currentState;
+
+    //--------------------Coroutine---------------//
+    [Header("Coroutines")]
+    public Coroutine movePlayer;
+
+    public Coroutine playerJump;
+
+    //-------------Inputs--------------------------//
+    [Header("Input Components")]
+    public Vector2 InputMove;
+
+    
+    PlayerInput playerInput;
 
     //-----------Player Controller-----------//
     PlayerController controller;
-    private void Start()
+    private void Awake()
     {
         controller = GetComponent<PlayerController>();
 
         parkourMover = GetComponent<ParkourMover>();
+
+        playerInput = GetComponent<PlayerInput>();
+    }
+
+    private void OnEnable()
+    {
+        playerInput.actions.FindAction("Jump").performed += JumpPerformed;
+        playerInput.actions.FindAction("Jump").canceled += JumpCancelled;
+
+
+        playerInput.actions.FindAction("Move").performed += MovePerformed;
+        playerInput.actions.FindAction("Move").canceled += MoveCancelled;
+    }
+    private void OnDisable()
+    {
+        playerInput.actions.FindAction("Jump").performed -= JumpPerformed;
+        playerInput.actions.FindAction("Jump").canceled -= JumpCancelled;
+
+
+        playerInput.actions.FindAction("Move").performed -= MovePerformed;
+        playerInput.actions.FindAction("Move").canceled -= MoveCancelled;
     }
 
 
@@ -46,25 +98,23 @@ public class ParkourDecider : MonoBehaviour
         CheckWall();
 
         //Checks if the player is not moving
-        if (controller.currentState != PlayerState.Jumping && controller.rb.linearVelocity.magnitude <= 0.1f && controller.isGrounded) { controller.currentState = PlayerState.Idle; }
-        else if (controller.currentState != PlayerState.Jumping && controller.rb.linearVelocity.magnitude >= 0.1f && controller.isGrounded ) { controller.currentState = PlayerState.Moving; }
+        if (currentState != PlayerState.Jumping && controller.rb.linearVelocity.magnitude <= 0.1f && controller.isGrounded) { currentState = PlayerState.Idle; Debug.Log("Player is Idle"); }
+        else if (currentState != PlayerState.Jumping && controller.rb.linearVelocity.magnitude >= 0.1f && controller.isGrounded ) { currentState = PlayerState.Moving; Debug.Log("Player is Moving"); }
 
-        if (distanceToWall < 1f && controller.jumpPressed)
+        if (distanceToWall < 1f && jumpPressed)
         {
             if (wallRunRoutine == null && WallisBeside())
             {
-                controller.currentState = PlayerState.WallRun;
-                wallRunRoutine = StartCoroutine(parkourMover.WallRun());
+                currentState = PlayerState.WallRun;
             }
             else if (climbRunRoutine == null && WallisInfront())
             {
                 
-                controller.currentState = PlayerState.Climb;
-                climbRunRoutine = StartCoroutine(parkourMover.Climb());
+                currentState = PlayerState.Climb;
             }
         }
 
-        if (controller.currentState != PlayerState.WallRun || controller.currentState != PlayerState.Climb)
+        if (currentState != PlayerState.WallRun || currentState != PlayerState.Climb)
         {
             //rotates the player to match the camera without following the z and x axis 
             var playerRotation = controller.playerCamera.transform.rotation;
@@ -72,14 +122,21 @@ public class ParkourDecider : MonoBehaviour
             playerRotation.z = 0;
             transform.rotation = playerRotation;
         }
+        directionOfPlayer = controller.rb.linearVelocity.normalized;
+
+        playerForward = controller.transform.forward.normalized;
+
     }
 
     private void Update()
     {
         FallCheck();
 
-
         CheckPlayerState();
+
+        WallisBeside();
+
+        WallisInfront();
     }
 
     private void CheckWall()
@@ -125,7 +182,7 @@ public class ParkourDecider : MonoBehaviour
     {
         if (controller.rb.linearVelocity.y < fallingThreshold)
         {
-            controller.currentState = PlayerState.Falling;
+            currentState = PlayerState.Falling;
         }
         else { isFalling = false; }
     }
@@ -141,33 +198,23 @@ public class ParkourDecider : MonoBehaviour
     private void CheckPlayerState()
     {
 
-        switch (controller.currentState)
+        switch (currentState)
         {
             case PlayerState.Idle:
-                StopCoroutine(controller.Move());
+                StopCoroutine(parkourMover.Move());
                 break;
 
             case PlayerState.Moving:
-                if (controller.movePlayer == null)
+                if(movePlayer == null)
                 {
-                    controller.movePlayer = StartCoroutine(controller.Move());
-                }
-                else
-                {
-                    StopCoroutine(controller.movePlayer);
-                    controller.movePlayer = null;
-                    controller.movePlayer = StartCoroutine(controller.Move());
+                    movePlayer = StartCoroutine(parkourMover.Move());
                 }
                 break;
 
             case PlayerState.Jumping:
-                controller.jumpPressed = true;
-
-                if (controller.playerJump != null)
+                if(playerJump == null)
                 {
-                    StopCoroutine(controller.Jump());
-                    controller.playerJump = null;
-                    controller.jumpPressed = false;
+                    playerJump = StartCoroutine(parkourMover.Jump());
                 }
                 break;
 
@@ -176,22 +223,30 @@ public class ParkourDecider : MonoBehaviour
                 break;
 
             case PlayerState.WallRun:
-                isWallrun = true;
-                if (wallRunRoutine != null)
+                 if (wallRunRoutine == null)
                 {
+                    isWallrun = true;
+                    wallRunRoutine = StartCoroutine(parkourMover.WallRun());
+                }
+                 else
+                {
+                    StopCoroutine(wallRunRoutine);
                     isWallrun = false;
-                    StopCoroutine(parkourMover.WallRun());
                     wallRunRoutine = null;
                 }
                 break;
 
             case PlayerState.Climb:
-                isClimbing = true;
-                if (climbRunRoutine != null)
+                if(climbRunRoutine == null)
                 {
+                    climbRunRoutine = StartCoroutine(parkourMover.Climb());
+                    isClimbing = true;
+                }
+                else
+                {
+                    StopCoroutine(climbRunRoutine);
                     isClimbing = false;
-                    StopCoroutine(parkourMover.Climb());
-                    climbRunRoutine = null;
+                    climbRunRoutine= null;
                 }
                 break;
 
@@ -202,5 +257,85 @@ public class ParkourDecider : MonoBehaviour
                 break;
         }
     }
+
+    //------------------Input Handlers----------------------//
+
+    private void JumpPerformed(InputAction.CallbackContext context)
+    {
+
+        InputJump = context.ReadValue<float>();
+
+        Debug.Log("Jump Pressed: " + InputJump);
+
+        jumpPressed = true;
+
+        if(canJump && currentState != PlayerState.Jumping)
+        {
+            currentState = PlayerState.Jumping;
+        }
+
+
+        Debug.Log(InputJump);
+        //Set state to player moving
+
+
+    }
+    private void JumpCancelled(InputAction.CallbackContext context)
+    {
+
+        InputJump = context.ReadValue<float>();
+
+        Debug.Log("Jump Cancelled: " + InputJump);
+
+        if (isFalling)
+        {
+           
+        }
+        playerJump = null;
+        jumpPressed = false;
+
+
+    }
+    private void MovePerformed(InputAction.CallbackContext context)
+    {
+        //Reads player input as vector 2
+        InputMove = context.ReadValue<Vector2>();
+        //if coroutine is null and player is not moving 
+        if (movePlayer == null && !isMoving && currentState != PlayerState.Moving)
+        {
+            //Player is now moving
+            isMoving = true;
+
+            //Set state to player moving
+            currentState = PlayerState.Moving;   
+            
+            while (isMoving)
+            {
+                //Animator.Play("Running");
+                return;
+            }
+        }
+    }
+
+    private void MoveCancelled(InputAction.CallbackContext context)
+    {
+        //Reads player input as vector 2
+        InputMove = context.ReadValue<Vector2>();
+        //if coroutine does not = null or if player stops input
+        if (movePlayer != null)
+        {
+            //player not moving
+            isMoving = false;
+
+            //Stop in here aswell incase player is holding button in other states
+            StopCoroutine(parkourMover.Move());
+
+            //Couroutine is now null 
+            movePlayer = null;
+
+            controller.rb.linearVelocity = Vector3.zero;
+        }
+    }
+
 
 }
