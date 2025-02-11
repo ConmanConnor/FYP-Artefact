@@ -103,46 +103,40 @@ public class ParkourDecider : MonoBehaviour
         CheckWall();
 
         //Checks if the player can switch to idle
-        if (CanSwitchToIdle()) { currentState = PlayerState.Idle; Debug.Log("Player is Idle"); }
+        if (CanSwitchToIdle()) { currentState = PlayerState.Idle; } //Debug.Log("Player is Idle"); }
         //Checks if the player can switch to moving
-        else if (CanSwitchToMove()) { currentState = PlayerState.Moving; Debug.Log("Player is Moving"); }
+        else if (CanSwitchToMove()) { currentState = PlayerState.Moving; } //Debug.Log("Player is Moving"); }
 
-        if (distanceToWall < 1f && jumpPressed)
+        else if (CanSwitchToWallRun())
         {
-            if (wallRunRoutine == null && WallisBeside())
-            {
-                currentState = PlayerState.WallRun;
-            }
-            else if (climbRunRoutine == null && WallisInfront())
-            {
-                
-                currentState = PlayerState.Climb;
-            }
+            currentState = PlayerState.WallRun;
+        }
+        else if (CanSwitchToClimb())
+        {
+
+            currentState = PlayerState.Climb;
         }
 
-        if (currentState != PlayerState.WallRun || currentState != PlayerState.Climb)
-        {
-            //rotates the player to match the camera without following the z and x axis 
-            var playerRotation = controller.playerCamera.transform.rotation;
-            playerRotation.x = 0;
-            playerRotation.z = 0;
-            transform.rotation = playerRotation;
+
+            if (currentState != PlayerState.WallRun || currentState != PlayerState.Climb)
+            {
+                //rotates the player to match the camera without following the z and x axis 
+                var playerRotation = controller.playerCamera.transform.rotation;
+                playerRotation.x = 0;
+                playerRotation.z = 0;
+                transform.rotation = playerRotation;
+            }
+            directionOfPlayer = controller.rb.linearVelocity.normalized;
+
+            playerForward = controller.transform.forward.normalized;
+
         }
-        directionOfPlayer = controller.rb.linearVelocity.normalized;
-
-        playerForward = controller.transform.forward.normalized;
-
-    }
 
     private void Update()
     {
         FallCheck();
 
         CheckPlayerState(currentState);
-
-        WallisBeside();
-
-        WallisInfront();
     }
 
     private void CheckWall()
@@ -193,13 +187,16 @@ public class ParkourDecider : MonoBehaviour
         else { isFalling = false; }
     }
 
-    public bool WallisBeside()
+    public bool CanSwitchToWallRun()
     {
-        return Physics.Raycast(controller.transform.position, transform.right, out _, 1f) || Physics.Raycast(controller.transform.position, -transform.right, out _, 1f);
+        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState
+            && distanceToWall < 1f && jumpPressed && wallDetected; //&& 
+            //(Physics.Raycast(controller.transform.position, transform.right, out _, 1f) || Physics.Raycast(controller.transform.position, -transform.right, out _, 1f));
     }
-    public bool WallisInfront()
+    public bool CanSwitchToClimb()
     {
-        return Physics.Raycast(controller.transform.position, transform.forward, out _, 1f) ;
+        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState
+            && distanceToWall < 1f && jumpPressed && wallDetected; //&& Physics.Raycast(controller.transform.position, transform.forward, out _, 1f) ;
     }
 
     public bool CanSwitchToMove()
@@ -231,6 +228,7 @@ public class ParkourDecider : MonoBehaviour
                 {
                     StopCoroutine(movePlayer);
                     movePlayer = null;
+                    isMoving = false;
                 }
                 break;
 
@@ -245,37 +243,50 @@ public class ParkourDecider : MonoBehaviour
             case PlayerState.Jumping:
                 if(playerJump == null)
                 {
+                    lastStateChangeTime = Time.time;
                     playerJump = StartCoroutine(parkourMover.Jump());
                 }
                 break;
 
             case PlayerState.Falling:
-                isFalling = true;
+                if (newState == PlayerState.Falling)
+                {
+                    lastStateChangeTime = Time.time;
+                    isFalling = true;
+                }
+                else
+                {
+                    isFalling = false;
+                }
                 break;
 
             case PlayerState.WallRun:
-                 if (wallRunRoutine == null && newState != PlayerState.WallRun)
+                 if (wallRunRoutine == null)
                 {
+                    lastStateChangeTime = Time.time;
                     wallRunRoutine = StartCoroutine(parkourMover.WallRun());
                 }
-                 else
+                 else if (wallRunRoutine != null)
                 {
                     StopCoroutine(wallRunRoutine);
                     isWallrun = false;
                     wallRunRoutine = null;
+                    controller.rb.useGravity = true;
                 }
                 break;
 
             case PlayerState.Climb:
-                if(climbRunRoutine == null && newState != PlayerState.Climb)
+                if(climbRunRoutine == null)
                 {
+                    lastStateChangeTime = Time.time;
                     climbRunRoutine = StartCoroutine(parkourMover.Climb());
                 }
-                else
+                else if (climbRunRoutine != null )
                 {
                     StopCoroutine(climbRunRoutine);
                     isClimbing = false;
                     climbRunRoutine= null;
+                    controller.rb.useGravity = true;
                 }
                 break;
 
@@ -332,6 +343,7 @@ public class ParkourDecider : MonoBehaviour
         //if coroutine is null and player is not moving 
         if (movePlayer == null && !isMoving && currentState != PlayerState.Moving)
         {
+
             //Player is now moving
             isMoving = true;
 

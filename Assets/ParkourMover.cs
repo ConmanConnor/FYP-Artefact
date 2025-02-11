@@ -23,7 +23,7 @@ public class ParkourMover : MonoBehaviour
     //----------------------------Movement Mechanics----------------------------//
     public IEnumerator WallRun()
     {
-       // Debug.Log("Wallrunning");
+        Debug.Log("Wallrunning");
      
         
             decider.canJump = true;
@@ -32,6 +32,8 @@ public class ParkourMover : MonoBehaviour
             //move direction while running (finds the cross vector of the wall)
             Vector3 wallRunDire = Vector3.Cross(decider.Hit.normal, Vector3.up);
             //Debug.Log("Wall Run Direction is: "+wallRunDire);
+
+            decider.isWallrun = true;
 
             float wallRelevantDot = Vector3.Dot(wallRunDire, decider.playerForward);
 
@@ -56,13 +58,15 @@ public class ParkourMover : MonoBehaviour
 
         yield return new WaitForFixedUpdate();
 
+        Debug.Log("Wallrun Routine Cancelled");
+
     }
 
     public IEnumerator Climb()
     {
-       
-       
-            decider.canJump = false;
+
+        Debug.Log("Climb Routine Started");
+        decider.canJump = false;
             //Debug.Log("Wall Detected?: " + objectDetected + " Can Jump?: " + canJump);
 
             //move direction while running (finds the cross vector of the wall)
@@ -75,16 +79,23 @@ public class ParkourMover : MonoBehaviour
             float wallRelDot = Vector3.Dot(wallRunDire, decider.playerForward);
 
             Debug.Log(wallRelDot);
+
+        decider.isClimbing = true;
+        while (decider.isClimbing)
+        {
             if (fDot < -0.5f)
             {
                 controller.rb.AddForce(Vector3.up * moveSpeed * 10f, ForceMode.Force);
-                decider.isClimbing = true;
                 controller.rb.useGravity = false;
                 //Debug.Log("Climbing");
-            }
-        
 
-        yield return new WaitForFixedUpdate();
+            }
+            yield return new WaitForFixedUpdate();
+        }
+        Debug.Log("Climb Routine ended");
+
+
+
     }
 
     public IEnumerator Jump()
@@ -92,7 +103,7 @@ public class ParkourMover : MonoBehaviour
         //checks if player is grounded
         if (decider.canJump)
         {
-            Debug.Log("Jump Routine Started");
+            //Debug.Log("Jump Routine Started");
             decider.jumpPressed = true;
             //Adds upward force
             controller.rb.AddForce(Vector3.up * jumpForce * 10f, ForceMode.Impulse);
@@ -100,7 +111,7 @@ public class ParkourMover : MonoBehaviour
             yield return null;
         }
         decider.jumpPressed = false;
-        Debug.Log("Jump Routine Ended");
+        //Debug.Log("Jump Routine Ended");
 
     }
 
@@ -108,7 +119,7 @@ public class ParkourMover : MonoBehaviour
     {
         while (decider.isMoving)
         {
-            Debug.Log("Move Routine Started");
+            //Debug.Log("Move Routine Started");
             //Calculates movement directions using vector 3 and input values
             Vector3 movedirection = controller.playerHead.forward * decider.InputMove.y + controller.playerHead.right * decider.InputMove.x;
             //Adds force to player
@@ -116,7 +127,7 @@ public class ParkourMover : MonoBehaviour
 
             yield return new WaitForFixedUpdate();
         }
-        Debug.Log("Move Routine Ended");
+        //Debug.Log("Move Routine Ended");
 
     }
 }
