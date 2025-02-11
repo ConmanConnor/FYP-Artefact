@@ -176,9 +176,31 @@ public class ParkourDecider : MonoBehaviour
         //Checks if the player can switch to moving
         else if (CanSwitchToMove()) { currentState = PlayerState.Moving; } //Debug.Log("Player is Moving"); }
 
-        else if (CanSwitchToWallRun()){ currentState = PlayerState.WallRun; }
+        else if (CanSwitchToWallRun())
+        {
+            currentState = PlayerState.WallRun;
 
-        else if (CanSwitchToClimb()){ currentState = PlayerState.Climb; }
+            if (climbRunRoutine != null)
+            {
+                StopCoroutine(climbRunRoutine);
+                isClimbing = false;
+                climbRunRoutine = null;
+                controller.rb.useGravity = true;
+            }
+        }
+
+        else if (CanSwitchToClimb())
+        { 
+            currentState = PlayerState.Climb;
+
+            if (wallRunRoutine != null)
+            {
+                StopCoroutine(wallRunRoutine);
+                isWallrun = false;
+                wallRunRoutine = null;
+                controller.rb.useGravity = true;
+            }
+        }
 
         else if (CanSwitchToFall()) { currentState = PlayerState.Falling; }
     }
@@ -222,7 +244,7 @@ public class ParkourDecider : MonoBehaviour
                 break;
 
             case PlayerState.Falling:
-                if (!isFalling)
+                if (controller.rb.linearVelocity.y <= fallingThreshold && !controller.isGrounded)
                 {
                     lastStateChangeTime = Time.time;
                     isFalling = true;
@@ -236,7 +258,6 @@ public class ParkourDecider : MonoBehaviour
                         isFalling = false;
                         timeOnGround = 0f;
                     }
-                    
                 }
                 else
                 {
@@ -249,14 +270,8 @@ public class ParkourDecider : MonoBehaviour
                  if (wallRunRoutine == null)
                 {
                     lastStateChangeTime = Time.time;
+                    isWallrun = true;
                     wallRunRoutine = StartCoroutine(parkourMover.WallRun());
-                }
-                 else if (wallRunRoutine != null)
-                {
-                    StopCoroutine(wallRunRoutine);
-                    isWallrun = false;
-                    wallRunRoutine = null;
-                    controller.rb.useGravity = true;
                 }
                 break;
 
@@ -264,14 +279,8 @@ public class ParkourDecider : MonoBehaviour
                 if(climbRunRoutine == null)
                 {
                     lastStateChangeTime = Time.time;
+                    isClimbing = true;
                     climbRunRoutine = StartCoroutine(parkourMover.Climb());
-                }
-                else if (climbRunRoutine != null )
-                {
-                    StopCoroutine(climbRunRoutine);
-                    isClimbing = false;
-                    climbRunRoutine= null;
-                    controller.rb.useGravity = true;
                 }
                 break;
 
@@ -362,12 +371,12 @@ public class ParkourDecider : MonoBehaviour
     //--------------------State switcher booleans-----------------//
     public bool CanSwitchToWallRun()
     {
-        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState
+        return Time.time > lastStateChangeTime + stateChangeCoolTime && parkourMover.fDot >= 0.5f && currentState != previousState
             && distanceToWall < 1f && jumpPressed && wallDetected; 
     }
     public bool CanSwitchToClimb()
     {
-        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState
+        return Time.time > lastStateChangeTime + stateChangeCoolTime && parkourMover.fDot <= -0.5f && currentState != previousState
             && distanceToWall < 1f && jumpPressed && wallDetected; 
     }
 

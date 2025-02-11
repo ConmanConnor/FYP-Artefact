@@ -13,6 +13,9 @@ public class ParkourMover : MonoBehaviour
     [Header("Float Values")]
     [SerializeField] public float moveSpeed;
     [SerializeField] public float jumpForce;
+    public float fDot;
+
+    public float wallRelDot;
 
     private void Start()
     {
@@ -30,8 +33,6 @@ public class ParkourMover : MonoBehaviour
             //move direction while running (finds the cross vector of the wall)
             Vector3 wallRunDire = Vector3.Cross(decider.Hit.normal, Vector3.up);
             //Debug.Log("Wall Run Direction is: "+wallRunDire);
-
-            decider.isWallrun = true;
 
             float wallRelevantDot = Vector3.Dot(wallRunDire, decider.playerForward);
 
@@ -71,22 +72,20 @@ public class ParkourMover : MonoBehaviour
         //Debug.Log("Wall Run Direction is: "+wallRunDire);
 
         //check if player is approaching the wall
-        float fDot = Vector3.Dot(decider.playerForward, decider.Hit.normal);
+         fDot = Vector3.Dot(decider.playerForward, decider.Hit.normal);
 
-        float wallRelDot = Vector3.Dot(wallRunDire, decider.playerForward);
+         wallRelDot = Vector3.Dot(wallRunDire, decider.playerForward);
 
          Debug.Log(wallRelDot);
 
-        decider.isClimbing = true;
         while (decider.isClimbing)
         {
-            if (fDot < -0.5f)
-            {
-                controller.rb.AddForce(Vector3.up * moveSpeed * 10f, ForceMode.Force);
-                controller.rb.useGravity = false;
-                //Debug.Log("Climbing");
+            
+            controller.rb.AddForce(Vector3.up * moveSpeed * 10f, ForceMode.Force);
+            controller.rb.useGravity = false;
+            //Debug.Log("Climbing");
 
-            }
+            
             yield return new WaitForFixedUpdate();
         }
         Debug.Log("Climb Routine ended");
