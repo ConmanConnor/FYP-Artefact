@@ -124,14 +124,4 @@ public class ParkourMover : MonoBehaviour
         //Debug.Log("Move Routine Ended");
 
     }
-
-    public IEnumerator FallCheck()
-    {
-        if (controller.isGrounded)
-        {
-            decider.isFalling = false;
-        }
-
-        yield return new WaitForFixedUpdate();
-    }
 }

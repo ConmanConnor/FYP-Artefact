@@ -15,8 +15,6 @@ public class ParkourDecider : MonoBehaviour
 
     Coroutine climbRunRoutine;
 
-    Coroutine fallingRoutine;
-
 
     //------------Booleans----------------------//
     [Header("Boolean Checks")]
@@ -33,7 +31,7 @@ public class ParkourDecider : MonoBehaviour
 
     //------------Layers Shrek!----------------------//
     [Header("Layermask")]
-    LayerMask layerMaskWall;
+    [SerializeField]LayerMask layerMaskWall;
 
     //------------Floats----------------------//
     [Header("Float Values")]
@@ -44,6 +42,8 @@ public class ParkourDecider : MonoBehaviour
     private float stateChangeCoolTime = 0.2f;
     private float lastStateChangeTime = 0f;
     private float movementThreshold = 0.15f;
+    private float timeOnGround = 0f;
+    private float requiredGroundTime = 0.2f;
 
     //-----------------------Vectors------------------//
     [Header("Player Vectors")]
@@ -108,23 +108,26 @@ public class ParkourDecider : MonoBehaviour
         stateChecker();
 
 
-            if (currentState != PlayerState.WallRun || currentState != PlayerState.Climb)
-            {
-                //rotates the player to match the camera without following the z and x axis 
-                var playerRotation = controller.playerCamera.transform.rotation;
-                playerRotation.x = 0;
-                playerRotation.z = 0;
-                transform.rotation = playerRotation;
-            }
-            directionOfPlayer = controller.rb.linearVelocity.normalized;
-
-            playerForward = controller.transform.forward.normalized;
-
+        if (currentState != PlayerState.WallRun || currentState != PlayerState.Climb)
+        {
+            //rotates the player to match the camera without following the z and x axis 
+            var playerRotation = controller.playerCamera.transform.rotation;
+            playerRotation.x = 0;
+            playerRotation.z = 0;
+            transform.rotation = playerRotation;
         }
+
+        directionOfPlayer = controller.rb.linearVelocity.normalized;
+
+        playerForward = controller.transform.forward.normalized;
+    }
 
     private void Update()
     {
         CheckPlayerState(currentState);
+
+        //Check for state if true set can jump to true
+        if (currentState == PlayerState.WallRun) { canJump = true; }
     }
 
     private void CheckWall()
@@ -164,9 +167,6 @@ public class ParkourDecider : MonoBehaviour
 
         }
         //Debug.Log("hit distance is: " + distanceToObstacke;
-
-        //Check for state if true set can jump to true
-        if (currentState == PlayerState.WallRun || currentState == PlayerState.Climb) { canJump = true; }
     }
 
     private void stateChecker()
@@ -222,11 +222,25 @@ public class ParkourDecider : MonoBehaviour
                 break;
 
             case PlayerState.Falling:
-                if (fallingRoutine == null)
+                if (!isFalling)
                 {
                     lastStateChangeTime = Time.time;
                     isFalling = true;
-                    fallingRoutine = StartCoroutine(parkourMover.FallCheck());
+                }
+                else if(controller.isGrounded)
+                {
+                    timeOnGround += Time.deltaTime;
+
+                    if(timeOnGround >= requiredGroundTime)
+                    {
+                        isFalling = false;
+                        timeOnGround = 0f;
+                    }
+                    
+                }
+                else
+                {
+                    timeOnGround = 0f;
                 }
                
                 break;
@@ -297,10 +311,13 @@ public class ParkourDecider : MonoBehaviour
 
         //Debug.Log("Jump Cancelled: " + InputJump);
 
-        if (isFalling)
+      if(isFalling || isWallrun || isClimbing)
         {
+            
             jumpPressed = false;
+            
         }
+
         playerJump = null;
        
 
