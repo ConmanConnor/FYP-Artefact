@@ -184,14 +184,15 @@ public class ParkourDecider : MonoBehaviour
     }
     private void CheckPlayerState(PlayerState newState)
     {
+        //Checks previous state of player
         if(currentState != newState)
         {
             previousState = currentState;
             currentState = newState;
 
-            Debug.Log(previousState);
+            //Debug.Log(previousState);
         }
-
+        //Switches between states
         switch (newState)
         {
             case PlayerState.Idle:

@@ -62,10 +62,6 @@ public class PlayerController : MonoBehaviour
     [Header("Player Camera")]
     public Camera playerCamera;
 
- 
-
- 
-
 void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -84,6 +80,7 @@ void Awake()
     }
 
     //---------------------------Ground Check------------------//
+    //Check for grounded using a delay
     private void groundCheck()
     {
         bool isGroundedNow = Physics.Raycast(playerFeet.position, Vector3.down, 0.6f);
