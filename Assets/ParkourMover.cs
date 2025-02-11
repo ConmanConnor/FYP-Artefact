@@ -24,9 +24,7 @@ public class ParkourMover : MonoBehaviour
     public IEnumerator WallRun()
     {
         Debug.Log("Wallrunning");
-     
-        
-            decider.canJump = true;
+
             //Debug.Log("Wall Detected?: " + objectDetected + " Can Jump?: " + canJump);
 
             //move direction while running (finds the cross vector of the wall)
@@ -66,19 +64,18 @@ public class ParkourMover : MonoBehaviour
     {
 
         Debug.Log("Climb Routine Started");
-        decider.canJump = false;
-            //Debug.Log("Wall Detected?: " + objectDetected + " Can Jump?: " + canJump);
+        //Debug.Log("Wall Detected?: " + objectDetected + " Can Jump?: " + canJump);
 
-            //move direction while running (finds the cross vector of the wall)
-            Vector3 wallRunDire = Vector3.Cross(decider.Hit.normal, Vector3.up);
-            //Debug.Log("Wall Run Direction is: "+wallRunDire);
+        //move direction while running (finds the cross vector of the wall)
+         Vector3 wallRunDire = Vector3.Cross(decider.Hit.normal, Vector3.up);
+        //Debug.Log("Wall Run Direction is: "+wallRunDire);
 
-            //check if player is approaching the wall
-            float fDot = Vector3.Dot(decider.playerForward, decider.Hit.normal);
+        //check if player is approaching the wall
+        float fDot = Vector3.Dot(decider.playerForward, decider.Hit.normal);
 
-            float wallRelDot = Vector3.Dot(wallRunDire, decider.playerForward);
+        float wallRelDot = Vector3.Dot(wallRunDire, decider.playerForward);
 
-            Debug.Log(wallRelDot);
+         Debug.Log(wallRelDot);
 
         decider.isClimbing = true;
         while (decider.isClimbing)
@@ -103,14 +100,11 @@ public class ParkourMover : MonoBehaviour
         //checks if player is grounded
         if (decider.canJump)
         {
-            //Debug.Log("Jump Routine Started");
-            decider.jumpPressed = true;
             //Adds upward force
             controller.rb.AddForce(Vector3.up * jumpForce * 10f, ForceMode.Impulse);
             //Debug.Log("Jumpy");
             yield return null;
         }
-        decider.jumpPressed = false;
         //Debug.Log("Jump Routine Ended");
 
     }
@@ -129,5 +123,15 @@ public class ParkourMover : MonoBehaviour
         }
         //Debug.Log("Move Routine Ended");
 
+    }
+
+    public IEnumerator FallCheck()
+    {
+        if (controller.isGrounded)
+        {
+            decider.isFalling = false;
+        }
+
+        yield return new WaitForFixedUpdate();
     }
 }

@@ -37,7 +37,11 @@ public class PlayerController : MonoBehaviour
 
     //-----------------------------Ogres have Layers---------//
     [SerializeField] LayerMask layerMaskGround;
- 
+
+    //-----------------------------Floats---------//
+    float lastGrounded = 0f;
+    float groundCheckDelay = 0.1f;
+
 
     //-----------------------Transform(noAutobots)---------//
     [SerializeField] public Transform playerFeet;
@@ -82,25 +86,21 @@ void Awake()
     //---------------------------Ground Check------------------//
     private void groundCheck()
     {
-        //Draws ray 
-        if(Physics.Raycast(playerFeet.transform.position, transform.TransformDirection(Vector3.down),out hit, 0.5f))
-        {
-            //player is grounded
-            isGrounded = true;
+        bool isGroundedNow = Physics.Raycast(playerFeet.position, Vector3.down, 0.6f);
 
+        if ((isGroundedNow))
+        {
+            lastGrounded = Time.time;
+            isGrounded = true;
             decider.canJump = true;
-           // Debug.Log("Ground");
-            Debug.DrawRay(playerFeet.transform.position, transform.TransformDirection(Vector3.down) * hit.distance, Color.green);
         }
         else
         {
-            //Player is not grounded
-            isGrounded = false;
-
-            decider.canJump = false;
-
-            //Debug.Log("No Ground");
-            Debug.DrawRay(playerFeet.transform.position, transform.TransformDirection(Vector3.down) * hit.distance, Color.red);
+            if (Time.time - lastGrounded > groundCheckDelay)
+            {
+                isGrounded = false;
+                decider.canJump = false;
+            }
         }
     }
 }
