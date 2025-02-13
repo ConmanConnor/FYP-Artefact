@@ -14,8 +14,12 @@ public class ParkourMover : MonoBehaviour
     [SerializeField] public float moveSpeed;
     [SerializeField] public float jumpForce;
     public float fDot;
+    public float wallRelevantDot;
 
     public float wallRelDot;
+
+    //-----------------Vectors---------------------//
+    public Vector3 wallRunDire;
 
     private void Start()
     {
@@ -28,35 +32,23 @@ public class ParkourMover : MonoBehaviour
     {
         Debug.Log("Wallrunning");
 
-            //Debug.Log("Wall Detected?: " + objectDetected + " Can Jump?: " + canJump);
-
-            //move direction while running (finds the cross vector of the wall)
-            Vector3 wallRunDire = Vector3.Cross(decider.Hit.normal, Vector3.up);
-            //Debug.Log("Wall Run Direction is: "+wallRunDire);
-
-            float wallRelevantDot = Vector3.Dot(wallRunDire, decider.playerForward);
-
             Debug.Log(wallRelevantDot);
-                //moves player based on direction of approach (left,right,forward)
-                if (wallRelevantDot < 0f)
-                {
-                    //Debug.Log("Banana");
-                    controller.rb.AddForce(-wallRunDire * moveSpeed * 10f, ForceMode.Force);
-                    controller.rb.useGravity = false;
-                    decider.isWallrun = true;
-                }
+        //moves player based on direction of approach (left,right,forward)
+        while (decider.isWallrun)
+        {
+            if (wallRelevantDot < 0f)
+            {
+                //Debug.Log("Banana");
+                controller.rb.AddForce(-wallRunDire * moveSpeed * 10f, ForceMode.Force);
+            }
 
-                else if (wallRelevantDot > 0f)
-                {
-                    //Debug.Log("Apple");
-                    controller.rb.AddForce(wallRunDire * moveSpeed * 10f, ForceMode.Force);
-                    controller.rb.useGravity = false;
-                    decider.isWallrun = true;
-                }
-         
-
-        yield return new WaitForFixedUpdate();
-
+            else if (wallRelevantDot > 0f)
+            {
+                //Debug.Log("Apple");
+                controller.rb.AddForce(wallRunDire * moveSpeed * 10f, ForceMode.Force);
+            }
+            yield return new WaitForFixedUpdate();
+        }
         Debug.Log("Wallrun Routine Cancelled");
 
     }
@@ -71,9 +63,6 @@ public class ParkourMover : MonoBehaviour
          Vector3 wallRunDire = Vector3.Cross(decider.Hit.normal, Vector3.up);
         //Debug.Log("Wall Run Direction is: "+wallRunDire);
 
-        //check if player is approaching the wall
-         fDot = Vector3.Dot(decider.playerForward, decider.Hit.normal);
-
          wallRelDot = Vector3.Dot(wallRunDire, decider.playerForward);
 
          Debug.Log(wallRelDot);
@@ -82,7 +71,6 @@ public class ParkourMover : MonoBehaviour
         {
             
             controller.rb.AddForce(Vector3.up * moveSpeed * 10f, ForceMode.Force);
-            controller.rb.useGravity = false;
             //Debug.Log("Climbing");
 
             
@@ -96,15 +84,13 @@ public class ParkourMover : MonoBehaviour
 
     public IEnumerator Jump()
     {
-        //checks if player is grounded
-        if (decider.canJump)
-        {
+        
             //Adds upward force
             controller.rb.AddForce(Vector3.up * jumpForce * 10f, ForceMode.Impulse);
             //Debug.Log("Jumpy");
-            yield return null;
-        }
-        //Debug.Log("Jump Routine Ended");
+            yield return new WaitForFixedUpdate();
+        
+       
 
     }
 

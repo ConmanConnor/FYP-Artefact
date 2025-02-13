@@ -25,6 +25,7 @@ public class ParkourDecider : MonoBehaviour
     public bool isMoving;
     public bool canJump;
     public bool jumpPressed;
+    [SerializeField]private bool bufferedJump;
 
     //------------Raycast Hits----------------------//
     public RaycastHit Hit;
@@ -44,6 +45,8 @@ public class ParkourDecider : MonoBehaviour
     private float movementThreshold = 0.15f;
     private float timeOnGround = 0f;
     private float requiredGroundTime = 0.2f;
+    private float jumpBufferTime = 0.2f;
+    private float lastJumpPressedTime = -1f;
 
     //-----------------------Vectors------------------//
     [Header("Player Vectors")]
@@ -69,6 +72,9 @@ public class ParkourDecider : MonoBehaviour
 
     
     PlayerInput playerInput;
+
+
+    
 
     //-----------Player Controller-----------//
     PlayerController controller;
@@ -107,7 +113,6 @@ public class ParkourDecider : MonoBehaviour
 
         stateChecker();
 
-
         if (currentState != PlayerState.WallRun || currentState != PlayerState.Climb)
         {
             //rotates the player to match the camera without following the z and x axis 
@@ -130,45 +135,6 @@ public class ParkourDecider : MonoBehaviour
         if (currentState == PlayerState.WallRun) { canJump = true; }
     }
 
-    private void CheckWall()
-    {
-        //Detects if a wall was hit
-        wallDetected = false;
-
-        //Raycast position = player position
-        Vector3 wallRayPos = controller.transform.position;
-
-        if (Physics.Raycast(wallRayPos, controller.transform.forward, out Hit, 10f, layerMaskWall))
-        {
-
-            //wall was detected
-            wallDetected = true;
-
-            Debug.DrawRay(wallRayPos, controller.transform.forward * 10f, Color.green);
-
-        }
-        else
-        {
-            //draw different color ray
-            Debug.DrawRay(wallRayPos, controller.transform.forward * 10f, Color.red);
-        }
-
-        //store distance to obstacle
-        distanceToWall = Mathf.Infinity;
-
-        //Checking each collider around the player
-        foreach (Collider col in Physics.OverlapSphere(controller.transform.position, 3f, layerMaskWall))
-        {
-            //Find the closest possible wall using the distance from the player to the hit collider
-            if (Vector3.Distance(controller.transform.position, col.ClosestPoint(controller.transform.position)) < distanceToWall)
-            {
-                distanceToWall = Vector3.Distance(transform.position, col.ClosestPoint(transform.position));
-            }
-
-        }
-        //Debug.Log("hit distance is: " + distanceToObstacke;
-    }
-
     private void stateChecker()
     {
         //Checks if the player can switch to idle
@@ -176,33 +142,20 @@ public class ParkourDecider : MonoBehaviour
         //Checks if the player can switch to moving
         else if (CanSwitchToMove()) { currentState = PlayerState.Moving; } //Debug.Log("Player is Moving"); }
 
-        else if (CanSwitchToWallRun())
-        {
-            currentState = PlayerState.WallRun;
+        else if (CanSwitchToWallRun()){ currentState = PlayerState.WallRun; }
 
-            if (climbRunRoutine != null)
-            {
-                StopCoroutine(climbRunRoutine);
-                isClimbing = false;
-                climbRunRoutine = null;
-                controller.rb.useGravity = true;
-            }
-        }
-
-        else if (CanSwitchToClimb())
-        { 
-            currentState = PlayerState.Climb;
-
-            if (wallRunRoutine != null)
-            {
-                StopCoroutine(wallRunRoutine);
-                isWallrun = false;
-                wallRunRoutine = null;
-                controller.rb.useGravity = true;
-            }
-        }
+        else if (CanSwitchToClimb()){ currentState = PlayerState.Climb; }
 
         else if (CanSwitchToFall()) { currentState = PlayerState.Falling; }
+
+        else if (CanSwitchToJump()) {currentState = PlayerState.Jumping ; }
+
+        if (jumpPressed)
+        {
+            lastJumpPressedTime = Time.time;
+        }
+
+        bufferedJump = (Time.time < lastJumpPressedTime + jumpBufferTime);
     }
     private void CheckPlayerState(PlayerState newState)
     {
@@ -212,7 +165,7 @@ public class ParkourDecider : MonoBehaviour
             previousState = currentState;
             currentState = newState;
 
-            //Debug.Log(previousState);
+            //Debug.Log($"The state has switched to: {currentState}");
         }
         //Switches between states
         switch (newState)
@@ -239,6 +192,7 @@ public class ParkourDecider : MonoBehaviour
                 if(playerJump == null)
                 {
                     lastStateChangeTime = Time.time;
+                    lastJumpPressedTime = -1f;
                     playerJump = StartCoroutine(parkourMover.Jump());
                 }
                 break;
@@ -271,7 +225,16 @@ public class ParkourDecider : MonoBehaviour
                 {
                     lastStateChangeTime = Time.time;
                     isWallrun = true;
+                    controller.rb.useGravity = false;
                     wallRunRoutine = StartCoroutine(parkourMover.WallRun());
+                }
+                else if (wallRunRoutine != null && !wallDetected)
+                {
+                    Debug.Log("Wall run is now disabled");
+                    StopCoroutine(wallRunRoutine);
+                    isWallrun = false;
+                    wallRunRoutine = null;
+                    controller.rb.useGravity = true;
                 }
                 break;
 
@@ -280,7 +243,16 @@ public class ParkourDecider : MonoBehaviour
                 {
                     lastStateChangeTime = Time.time;
                     isClimbing = true;
+                    controller.rb.useGravity = false;
                     climbRunRoutine = StartCoroutine(parkourMover.Climb());
+                }
+                else if (climbRunRoutine != null && !wallDetected)
+                {
+                    Debug.Log("Climb is now disabled");
+                    StopCoroutine(climbRunRoutine);
+                    isClimbing = false;
+                    climbRunRoutine = null;
+                    controller.rb.useGravity = true;
                 }
                 break;
 
@@ -289,6 +261,93 @@ public class ParkourDecider : MonoBehaviour
 
             default:
                 break;
+
+        }
+        //Debug.Log($"After switching - Previous State: {previousState}, Current State: {currentState}");
+    }
+
+    //--------------------State switcher booleans-----------------//
+    public bool CanSwitchToWallRun()
+    {
+        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState
+            && distanceToWall < 1f && (bufferedJump) && wallDetected;
+    }
+    public bool CanSwitchToClimb()
+    {
+        //Debug.Log($"Player Forward Dot: {parkourMover.fDot}");
+        return Time.time > lastStateChangeTime + stateChangeCoolTime && parkourMover.fDot <= -0.5f && currentState != previousState
+            && distanceToWall < 1f && (bufferedJump) && wallDetected;
+    }
+
+    public bool CanSwitchToMove()
+    {
+        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState && (currentState == PlayerState.Idle)
+            && controller.rb.linearVelocity.magnitude >= movementThreshold && controller.isGrounded;
+    }
+
+    public bool CanSwitchToFall()
+    {
+        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState &&
+           controller.rb.linearVelocity.y <= fallingThreshold && !controller.isGrounded;
+    }
+
+    public bool CanSwitchToJump()
+    {
+        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState &&
+            bufferedJump && canJump;
+    }
+
+    public bool CanSwitchToIdle()
+    {
+        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState &&
+            controller.rb.linearVelocity.magnitude <= (movementThreshold - 0.05f) && controller.isGrounded;
+    }
+
+    //------------------Wall Checker------------------------//
+    private void CheckWall()
+    {
+        //Detects if a wall was hit
+        wallDetected = false;
+
+        //check if player is approaching the wall
+        parkourMover.fDot = Vector3.Dot(playerForward, Hit.normal);
+
+        //move direction while running (finds the cross vector of the wall)
+        parkourMover. wallRunDire = Vector3.Cross(Hit.normal, Vector3.up);
+
+        //Checks wall relevant dot
+        parkourMover.wallRelevantDot = Vector3.Dot(parkourMover.wallRunDire, playerForward);
+
+        //Raycast position = player position
+        Vector3 wallRayPos = controller.transform.position;
+
+        if (Physics.Raycast(wallRayPos, controller.transform.forward, out Hit, 10f, layerMaskWall))
+        {
+
+            //wall was detected
+            wallDetected = true;
+
+            Debug.DrawRay(wallRayPos, controller.transform.forward * 10f, Color.green);
+
+        }
+        else
+        {
+            //draw different color ray
+            Debug.DrawRay(wallRayPos, controller.transform.forward * 10f, Color.red);
+        }
+
+        //store distance to obstacle
+        distanceToWall = Mathf.Infinity;
+
+        //Checking each collider around the player
+        foreach (Collider col in Physics.OverlapSphere(controller.transform.position, 10f, layerMaskWall))
+        {
+            //Find the closest possible wall using the distance from the player to the hit collider
+            if (Vector3.Distance(controller.transform.position, col.ClosestPoint(controller.transform.position)) < distanceToWall)
+            {
+                //Checks distance and closest contact point
+                distanceToWall = Vector3.Distance(transform.position, col.ClosestPoint(transform.position));
+            }
         }
     }
 
@@ -299,38 +358,16 @@ public class ParkourDecider : MonoBehaviour
 
         InputJump = context.ReadValue<float>();
 
-        //Debug.Log("Jump Pressed: " + InputJump);
-
-        if(canJump && currentState != PlayerState.Jumping)
-        {
-            jumpPressed = true;
-            currentState = PlayerState.Jumping;
-        }
-
-
-        Debug.Log(InputJump);
-        //Set state to player moving
-
-
+        jumpPressed = true;
     }
     private void JumpCancelled(InputAction.CallbackContext context)
     {
 
         InputJump = context.ReadValue<float>();
 
-        //Debug.Log("Jump Cancelled: " + InputJump);
+        jumpPressed = false;
 
-      if(isFalling || isWallrun || isClimbing)
-        {
-            
-            jumpPressed = false;
-            
-        }
-
-        playerJump = null;
-       
-
-
+        //playerJump = null;
     }
     private void MovePerformed(InputAction.CallbackContext context)
     {
@@ -367,36 +404,4 @@ public class ParkourDecider : MonoBehaviour
             controller.rb.linearVelocity = Vector3.zero;
         }
     }
-
-    //--------------------State switcher booleans-----------------//
-    public bool CanSwitchToWallRun()
-    {
-        return Time.time > lastStateChangeTime + stateChangeCoolTime && parkourMover.fDot >= 0.5f && currentState != previousState
-            && distanceToWall < 1f && jumpPressed && wallDetected; 
-    }
-    public bool CanSwitchToClimb()
-    {
-        return Time.time > lastStateChangeTime + stateChangeCoolTime && parkourMover.fDot <= -0.5f && currentState != previousState
-            && distanceToWall < 1f && jumpPressed && wallDetected; 
-    }
-
-    public bool CanSwitchToMove()
-    {
-        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState && (currentState == PlayerState.Idle)
-            && controller.rb.linearVelocity.magnitude >= movementThreshold && controller.isGrounded;
-    }
-
-    public bool CanSwitchToFall()
-    {
-        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState &&
-           controller.rb.linearVelocity.y <= fallingThreshold && !controller.isGrounded;
-    }
-
-    public bool CanSwitchToIdle()
-    {
-        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState &&
-            controller.rb.linearVelocity.magnitude <= (movementThreshold - 0.05f) && controller.isGrounded;
-    }
-
-
 }
