@@ -24,8 +24,8 @@ public class ParkourDecider : MonoBehaviour
     public bool isClimbing = false;
     public bool isMoving;
     public bool canJump;
-    public bool jumpPressed;
     [SerializeField]private bool bufferedJump;
+    private bool jumpPressed;
 
     //------------Raycast Hits----------------------//
     public RaycastHit Hit;
@@ -47,6 +47,7 @@ public class ParkourDecider : MonoBehaviour
     private float requiredGroundTime = 0.2f;
     private float jumpBufferTime = 0.2f;
     private float lastJumpPressedTime = -1f;
+    private float jumpPressedFloat;
 
     //-----------------------Vectors------------------//
     [Header("Player Vectors")]
@@ -70,11 +71,15 @@ public class ParkourDecider : MonoBehaviour
     [Header("Input Components")]
     public Vector2 InputMove;
 
-    
+
     PlayerInput playerInput;
 
+    InputCustom customInput;
 
-    
+    InputAction jumpAction;
+
+
+
 
     //-----------Player Controller-----------//
     PlayerController controller;
@@ -85,25 +90,26 @@ public class ParkourDecider : MonoBehaviour
         parkourMover = GetComponent<ParkourMover>();
 
         playerInput = GetComponent<PlayerInput>();
+
+        customInput = new InputCustom();
+
+        jumpAction = customInput.Player.Jump;
+
     }
 
     private void OnEnable()
     {
-        playerInput.actions.FindAction("Jump").performed += JumpPerformed;
-        playerInput.actions.FindAction("Jump").canceled += JumpCancelled;
-
-
         playerInput.actions.FindAction("Move").performed += MovePerformed;
         playerInput.actions.FindAction("Move").canceled += MoveCancelled;
+
+        customInput.Player.Enable();
     }
     private void OnDisable()
     {
-        playerInput.actions.FindAction("Jump").performed -= JumpPerformed;
-        playerInput.actions.FindAction("Jump").canceled -= JumpCancelled;
-
-
         playerInput.actions.FindAction("Move").performed -= MovePerformed;
         playerInput.actions.FindAction("Move").canceled -= MoveCancelled;
+
+        customInput.Player.Disable();
     }
 
 
@@ -133,6 +139,7 @@ public class ParkourDecider : MonoBehaviour
 
         //Check for state if true set can jump to true
         if (currentState == PlayerState.WallRun) { canJump = true; }
+
     }
 
     private void stateChecker()
@@ -150,10 +157,7 @@ public class ParkourDecider : MonoBehaviour
 
         else if (CanSwitchToJump()) {currentState = PlayerState.Jumping ; }
 
-        if (jumpPressed)
-        {
-            lastJumpPressedTime = Time.time;
-        }
+        jumpPressedFloat = jumpAction.ReadValue<float>();
 
         bufferedJump = (Time.time < lastJumpPressedTime + jumpBufferTime);
     }
@@ -191,9 +195,15 @@ public class ParkourDecider : MonoBehaviour
             case PlayerState.Jumping:
                 if(playerJump == null)
                 {
+                    lastJumpPressedTime = Time.time;
                     lastStateChangeTime = Time.time;
                     lastJumpPressedTime = -1f;
+                    jumpPressed = true;
                     playerJump = StartCoroutine(parkourMover.Jump());
+                }
+                else if (Time.time > lastJumpPressedTime + jumpBufferTime)
+                {
+                    jumpPressed = false;
                 }
                 break;
 
@@ -293,8 +303,9 @@ public class ParkourDecider : MonoBehaviour
 
     public bool CanSwitchToJump()
     {
+        Debug.Log(jumpPressedFloat);
         return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState &&
-            bufferedJump && canJump;
+            bufferedJump && canJump && jumpPressedFloat > 0;
     }
 
     public bool CanSwitchToIdle()
@@ -352,23 +363,6 @@ public class ParkourDecider : MonoBehaviour
     }
 
     //------------------Input Handlers----------------------//
-
-    private void JumpPerformed(InputAction.CallbackContext context)
-    {
-
-        InputJump = context.ReadValue<float>();
-
-        jumpPressed = true;
-    }
-    private void JumpCancelled(InputAction.CallbackContext context)
-    {
-
-        InputJump = context.ReadValue<float>();
-
-        jumpPressed = false;
-
-        //playerJump = null;
-    }
     private void MovePerformed(InputAction.CallbackContext context)
     {
         //Reads player input as vector 2
