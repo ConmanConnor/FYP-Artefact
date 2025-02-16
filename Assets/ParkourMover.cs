@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using static UnityEngine.EventSystems.StandaloneInputModule;
 
+
 public class ParkourMover : MonoBehaviour
 {
     //-----------Player Controller & Parkour Decider-----------//
@@ -18,13 +19,28 @@ public class ParkourMover : MonoBehaviour
 
     public float wallRelDot;
 
+    public float jumpBufferTime = 0.2f;
+    public float lastJumpPressedTime = -1f;
+
     //-----------------Vectors---------------------//
     public Vector3 wallRunDire;
+
+    //-----------------Booleans--------------------//
+    public bool bufferedJump;
 
     private void Start()
     {
         controller = GetComponent<PlayerController>();
         decider = GetComponent<ParkourDecider>();
+    }
+
+    private void Update()
+    {
+
+        bufferedJump = (Time.time < lastJumpPressedTime + jumpBufferTime);
+        //Debug.Log(bufferedJump);
+
+        Debug.Log(jumpBufferTime);
     }
 
     //----------------------------Movement Mechanics----------------------------//
@@ -84,13 +100,17 @@ public class ParkourMover : MonoBehaviour
 
     public IEnumerator Jump()
     {
-        
-            //Adds upward force
-            controller.rb.AddForce(Vector3.up * jumpForce * 10f, ForceMode.Impulse);
-            //Debug.Log("Jumpy");
-            yield return new WaitForFixedUpdate();
-        
+        Debug.Log("Jump Routine Started");
        
+        //Adds upward force
+        controller.rb.AddForce(Vector3.up * jumpForce * 10f, ForceMode.Impulse);
+         //Debug.Log("Jumpy");
+        yield return new WaitForSeconds(jumpBufferTime);
+        
+        decider.jumpPressed = false;
+        Debug.Log("Jump Routine Ended");
+        lastJumpPressedTime = -1f;
+
 
     }
 

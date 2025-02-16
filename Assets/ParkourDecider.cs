@@ -24,8 +24,10 @@ public class ParkourDecider : MonoBehaviour
     public bool isClimbing = false;
     public bool isMoving;
     public bool canJump;
-    [SerializeField]private bool bufferedJump;
-    private bool jumpPressed;
+
+    public bool jumpPressed;
+
+    bool switchedJump;
 
     //------------Raycast Hits----------------------//
     public RaycastHit Hit;
@@ -45,9 +47,8 @@ public class ParkourDecider : MonoBehaviour
     private float movementThreshold = 0.15f;
     private float timeOnGround = 0f;
     private float requiredGroundTime = 0.2f;
-    private float jumpBufferTime = 0.2f;
-    private float lastJumpPressedTime = -1f;
-    private float jumpPressedFloat;
+
+    public float jumpPressedFloat;
 
     //-----------------------Vectors------------------//
     [Header("Player Vectors")]
@@ -102,12 +103,18 @@ public class ParkourDecider : MonoBehaviour
         playerInput.actions.FindAction("Move").performed += MovePerformed;
         playerInput.actions.FindAction("Move").canceled += MoveCancelled;
 
+        playerInput.actions.FindAction("Jump").performed += JumpPerformed;
+        playerInput.actions.FindAction("Jump").canceled += JumpCancelled;
+
         customInput.Player.Enable();
     }
     private void OnDisable()
     {
         playerInput.actions.FindAction("Move").performed -= MovePerformed;
         playerInput.actions.FindAction("Move").canceled -= MoveCancelled;
+
+        playerInput.actions.FindAction("Jump").performed -= JumpPerformed;
+        playerInput.actions.FindAction("Jump").canceled -= JumpCancelled;
 
         customInput.Player.Disable();
     }
@@ -155,11 +162,10 @@ public class ParkourDecider : MonoBehaviour
 
         else if (CanSwitchToFall()) { currentState = PlayerState.Falling; }
 
-        else if (CanSwitchToJump()) {currentState = PlayerState.Jumping ; }
+        else if (CanSwitchToJump() && jumpPressedFloat == 1) { currentState = PlayerState.Jumping;   switchedJump = true;  }
+        else if (!CanSwitchToJump()) { switchedJump = false; }
+        Debug.Log(switchedJump);
 
-        jumpPressedFloat = jumpAction.ReadValue<float>();
-
-        bufferedJump = (Time.time < lastJumpPressedTime + jumpBufferTime);
     }
     private void CheckPlayerState(PlayerState newState)
     {
@@ -195,15 +201,10 @@ public class ParkourDecider : MonoBehaviour
             case PlayerState.Jumping:
                 if(playerJump == null)
                 {
-                    lastJumpPressedTime = Time.time;
+                    parkourMover.lastJumpPressedTime = Time.time;
                     lastStateChangeTime = Time.time;
-                    lastJumpPressedTime = -1f;
                     jumpPressed = true;
                     playerJump = StartCoroutine(parkourMover.Jump());
-                }
-                else if (Time.time > lastJumpPressedTime + jumpBufferTime)
-                {
-                    jumpPressed = false;
                 }
                 break;
 
@@ -280,13 +281,13 @@ public class ParkourDecider : MonoBehaviour
     public bool CanSwitchToWallRun()
     {
         return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState
-            && distanceToWall < 1f && (bufferedJump) && wallDetected;
+            && distanceToWall < 1f && (parkourMover.bufferedJump) && wallDetected && jumpPressed;
     }
     public bool CanSwitchToClimb()
     {
         //Debug.Log($"Player Forward Dot: {parkourMover.fDot}");
         return Time.time > lastStateChangeTime + stateChangeCoolTime && parkourMover.fDot <= -0.5f && currentState != previousState
-            && distanceToWall < 1f && (bufferedJump) && wallDetected;
+            && distanceToWall < 1f && (parkourMover.bufferedJump) && wallDetected && jumpPressed;
     }
 
     public bool CanSwitchToMove()
@@ -303,9 +304,9 @@ public class ParkourDecider : MonoBehaviour
 
     public bool CanSwitchToJump()
     {
-        Debug.Log(jumpPressedFloat);
+
         return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState &&
-            bufferedJump && canJump && jumpPressedFloat > 0;
+            parkourMover.bufferedJump && canJump;
     }
 
     public bool CanSwitchToIdle()
@@ -397,5 +398,17 @@ public class ParkourDecider : MonoBehaviour
 
             controller.rb.linearVelocity = Vector3.zero;
         }
+    }
+
+    private void JumpPerformed(InputAction.CallbackContext context)
+    {
+        jumpPressedFloat = context.ReadValue<float>();
+
+        parkourMover.lastJumpPressedTime = Time.time;
+    }
+
+    private void JumpCancelled(InputAction.CallbackContext context)
+    {
+        jumpPressedFloat = context.ReadValue<float>();
     }
 }
