@@ -102,12 +102,18 @@ public class ParkourDecider : MonoBehaviour
         playerInput.actions.FindAction("Move").performed += MovePerformed;
         playerInput.actions.FindAction("Move").canceled += MoveCancelled;
 
+        playerInput.actions.FindAction("Jump").performed += JumpPerformed;
+        playerInput.actions.FindAction("Jump").canceled += JumpCancelled;
+
         customInput.Player.Enable();
     }
     private void OnDisable()
     {
         playerInput.actions.FindAction("Move").performed -= MovePerformed;
         playerInput.actions.FindAction("Move").canceled -= MoveCancelled;
+
+        playerInput.actions.FindAction("Jump").performed -= JumpPerformed;
+        playerInput.actions.FindAction("Jump").canceled -= JumpCancelled;
 
         customInput.Player.Disable();
     }
@@ -198,12 +204,7 @@ public class ParkourDecider : MonoBehaviour
                     lastJumpPressedTime = Time.time;
                     lastStateChangeTime = Time.time;
                     lastJumpPressedTime = -1f;
-                    jumpPressed = true;
                     playerJump = StartCoroutine(parkourMover.Jump());
-                }
-                else if (Time.time > lastJumpPressedTime + jumpBufferTime)
-                {
-                    jumpPressed = false;
                 }
                 break;
 
@@ -304,8 +305,7 @@ public class ParkourDecider : MonoBehaviour
     public bool CanSwitchToJump()
     {
         Debug.Log(jumpPressedFloat);
-        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState &&
-            bufferedJump && canJump && jumpPressedFloat > 0;
+        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState && canJump ;
     }
 
     public bool CanSwitchToIdle()
@@ -398,4 +398,23 @@ public class ParkourDecider : MonoBehaviour
             controller.rb.linearVelocity = Vector3.zero;
         }
     }
+
+    private void JumpPerformed(InputAction.CallbackContext context)
+    {
+       InputJump = context.ReadValue<float>();
+
+        jumpPressed = true;
+      
+    }
+
+    private void JumpCancelled(InputAction.CallbackContext context)
+    {
+        InputJump = context.ReadValue<float>();
+
+        if (currentState == PlayerState.Falling)
+        {
+            jumpPressed = false;
+        }
+    }
+
 }
