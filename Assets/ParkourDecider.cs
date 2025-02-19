@@ -372,12 +372,12 @@ public class ParkourDecider : MonoBehaviour
     public bool CanSwitchToWallRun()
     {
         return Time.time > lastStateChangeTime + stateChangeCoolTime && parkourMover.fDot >= 0.5f && currentState != previousState
-            && distanceToWall < 1f && jumpPressed && wallDetected; 
+            && distanceToWall < 1f  && wallDetected; 
     }
     public bool CanSwitchToClimb()
     {
         return Time.time > lastStateChangeTime + stateChangeCoolTime && parkourMover.fDot <= -0.5f && currentState != previousState
-            && distanceToWall < 1f && jumpPressed && wallDetected; 
+            && distanceToWall < 1f  && wallDetected; 
     }
 
     public bool CanSwitchToMove()

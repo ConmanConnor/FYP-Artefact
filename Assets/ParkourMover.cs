@@ -37,25 +37,28 @@ public class ParkourMover : MonoBehaviour
             float wallRelevantDot = Vector3.Dot(wallRunDire, decider.playerForward);
 
             Debug.Log(wallRelevantDot);
-                //moves player based on direction of approach (left,right,forward)
-                if (wallRelevantDot < 0f)
-                {
-                    //Debug.Log("Banana");
-                    controller.rb.AddForce(-wallRunDire * moveSpeed * 10f, ForceMode.Force);
-                    controller.rb.useGravity = false;
-                    decider.isWallrun = true;
-                }
+        //moves player based on direction of approach (left,right,forward)
+        while (decider.isWallrun)
+        {
+            if (wallRelevantDot < 0f)
+            {
+                //Debug.Log("Banana");
+                controller.rb.AddForce(-wallRunDire * moveSpeed * 10f, ForceMode.Force);
+                controller.rb.useGravity = false;
+            }
 
-                else if (wallRelevantDot > 0f)
-                {
-                    //Debug.Log("Apple");
-                    controller.rb.AddForce(wallRunDire * moveSpeed * 10f, ForceMode.Force);
-                    controller.rb.useGravity = false;
-                    decider.isWallrun = true;
-                }
-         
+            else if (wallRelevantDot > 0f)
+            {
+                //Debug.Log("Apple");
+                controller.rb.AddForce(wallRunDire * moveSpeed * 10f, ForceMode.Force);
+                controller.rb.useGravity = false;
+            }
+            yield return new WaitForFixedUpdate();
+        }
+        controller.rb.useGravity = true;
 
-        yield return new WaitForFixedUpdate();
+
+
 
         Debug.Log("Wallrun Routine Cancelled");
 
@@ -88,6 +91,7 @@ public class ParkourMover : MonoBehaviour
             
             yield return new WaitForFixedUpdate();
         }
+        controller.rb.useGravity = true;
         Debug.Log("Climb Routine ended");
 
 
