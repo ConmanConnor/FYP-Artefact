@@ -25,6 +25,9 @@ public class HeadBib : MonoBehaviour
         decider = GameObject.FindGameObjectWithTag("Player").GetComponent<ParkourDecider>();
         camHold = this.GetComponentInChildren<Camera>();
 
+        decider = GetComponentInParent<ParkourDecider>();
+        controller = GetComponentInParent<PlayerController>();
+
         originPos = transform.localPosition;
     }
 
