@@ -1820,6 +1820,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1835456619}
   - component: {fileID: 1835456620}
+  - component: {fileID: 1835456621}
   m_Layer: 0
   m_Name: CamHolder
   m_TagString: Untagged
@@ -1850,15 +1851,30 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1835456618}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 84de995ee661d6345a02b493b0a9e122, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   frequency: 18
-  Amplitude: 1
+  Amplitude: 0.8
   INTERspeed: 20
   camHold: {fileID: 0}
+--- !u!114 &1835456621
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1835456618}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6acd485f52b014c41be7d3554a957b44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  frequency: 18
+  Amount: 0.8
+  Tspeed: 12
 --- !u!1 &1900402874
 GameObject:
   m_ObjectHideFlags: 0
