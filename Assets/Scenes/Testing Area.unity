@@ -1981,6 +1981,7 @@ GameObject:
   - component: {fileID: 1922013143}
   - component: {fileID: 1922013146}
   - component: {fileID: 1922013145}
+  - component: {fileID: 1922013147}
   - component: {fileID: 1922013142}
   - component: {fileID: 1922013144}
   m_Layer: 0
@@ -2268,6 +2269,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 1.5
   jumpForce: 1
+  fDot: 0
+  wallRelDot: 0
 --- !u!114 &1922013146
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2297,6 +2300,18 @@ MonoBehaviour:
   playerForward: {x: 0, y: 0, z: 0}
   currentState: 0
   InputMove: {x: 0, y: 0}
+--- !u!114 &1922013147
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1922013136}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4343df1e6639385458c2ffc8d5a6cabb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2076727251
 GameObject:
   m_ObjectHideFlags: 0

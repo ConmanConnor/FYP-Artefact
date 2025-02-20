@@ -54,10 +54,6 @@ public class PlayerController : MonoBehaviour
     [Header("Boolean Checks")]
     [SerializeField] public bool isGrounded;
 
-    //-----------------Aninimation----------------//
-    [Header("Animation")]
-    Animator Animator;
-
     //------------------Camera--------------------//
     [Header("Player Camera")]
     public Camera playerCamera;
@@ -67,7 +63,7 @@ void Awake()
         rb = GetComponent<Rigidbody>();
       
         playerCamera = Camera.main;
-        Animator = GetComponent<Animator>();
+      
         playerCTR = GetComponent<PlayerController>();
         parkourMover = GetComponent<ParkourMover>();
         decider = GetComponent<ParkourDecider>();
