@@ -1,5 +1,7 @@
+using System;
 using UnityEngine;
 using System.Collections;
+using UnityEngine.PlayerLoop;
 using static UnityEngine.EventSystems.StandaloneInputModule;
 
 public class ParkourMover : MonoBehaviour
@@ -17,10 +19,24 @@ public class ParkourMover : MonoBehaviour
 
     public float wallRelDot;
 
+    [SerializeField]private float wallrunTimeLimit = 3f;
+
     private void Start()
     {
         controller = GetComponent<PlayerController>();
         decider = GetComponent<ParkourDecider>();
+    }
+
+    private void Update()
+    {
+        if (decider.currentState == PlayerState.WallRun)
+        {
+            wallrunTimeLimit -= Time.deltaTime;
+            if (wallrunTimeLimit <= 0f)
+            {
+                StopWallrun();
+            }
+        }
     }
 
     //----------------------------Movement Mechanics----------------------------//
@@ -61,6 +77,21 @@ public class ParkourMover : MonoBehaviour
             yield return new WaitForFixedUpdate();
         }
         Debug.Log("Wallrun Routine Cancelled");
+    }
+
+    public void StopWallrun()
+    {
+        if (decider.wallRunRoutine != null)
+        {
+            StopCoroutine(decider.wallRunRoutine);
+            decider.wallRunRoutine = null;
+        }
+
+        decider.isWallrun = false;
+        controller.rb.useGravity = true;
+
+        decider.currentState = PlayerState.Falling;
+        wallrunTimeLimit = 3f;
     }
 
     public IEnumerator Climb()

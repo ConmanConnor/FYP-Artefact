@@ -11,7 +11,7 @@ public class ParkourDecider : MonoBehaviour
     ParkourMover parkourMover;
 
     //------------Coroutines----------------------//
-    Coroutine wallRunRoutine;
+    public Coroutine wallRunRoutine;
 
     Coroutine climbRunRoutine;
 
@@ -49,6 +49,7 @@ public class ParkourDecider : MonoBehaviour
     private float timeOnGround = 0f;
     private float requiredGroundTime = 0.2f;
     private float wallrunSpeed = 15f;
+    private float wallrunTimeLimit = 3f;
 
     //-----------------------Vectors------------------//
     [Header("Player Vectors")]
@@ -236,11 +237,6 @@ public class ParkourDecider : MonoBehaviour
         }
 
         else if (CanSwitchToFall()) { currentState = PlayerState.Falling; }
-
-        if (currentState != PlayerState.WallRun)
-        {
-            parkourMover.moveSpeed = 20f;
-        }
     }
     private void CheckPlayerState(PlayerState newState)
     {
@@ -411,7 +407,7 @@ public class ParkourDecider : MonoBehaviour
     public bool CanSwitchToWallRun()
     {
         return Time.time > lastStateChangeTime + stateChangeCoolTime /*&& parkourMover.fDot >= 0.5f*/ && currentState != previousState
-            && distanceToWall < 1f  && (wallLeft||wallRight) && jumpPressed; 
+            && distanceToWall < 1f  && (wallLeft||wallRight) && !controller.isGrounded; 
     }
     public bool CanSwitchToClimb()
     {
