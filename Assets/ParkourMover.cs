@@ -103,8 +103,17 @@ public class ParkourMover : MonoBehaviour
         //checks if player is grounded
         if (decider.canJump)
         {
+            //Jump buffer fix here creates a true jump buffer
+            
+            //Creates a variable taking in the change in position of the player
+            Vector3 vel = controller.rb.linearVelocity;
+            //Sets vel to 0 on y axis
+            vel.y = 0;
+            //Sets the player velocity to vel
+            controller.rb.linearVelocity = vel;
+            
             //Adds upward force
-            controller.rb.AddForce(Vector3.up * jumpForce * 10f, ForceMode.Impulse);
+            controller.rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
             //Debug.Log("Jumpy");
             yield return null;
         }
@@ -120,7 +129,7 @@ public class ParkourMover : MonoBehaviour
             //Calculates movement directions using vector 3 and input values
             Vector3 movedirection = controller.playerHead.forward * decider.InputMove.y + controller.playerHead.right * decider.InputMove.x;
             //Adds force to player
-            controller.rb.AddForce(movedirection.normalized * moveSpeed * 10f, ForceMode.Force);
+            controller.rb.AddForce(movedirection.normalized * moveSpeed, ForceMode.Force);
 
             yield return new WaitForFixedUpdate();
         }
