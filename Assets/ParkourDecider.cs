@@ -48,7 +48,7 @@ public class ParkourDecider : MonoBehaviour
     private float movementThreshold = 0.15f;
     private float timeOnGround = 0f;
     private float requiredGroundTime = 0.2f;
-    private float wallrunSpeed;
+    private float wallrunSpeed = 15f;
 
     //-----------------------Vectors------------------//
     [Header("Player Vectors")]
@@ -222,7 +222,6 @@ public class ParkourDecider : MonoBehaviour
                 controller.rb.useGravity = true;
             }
         }
-
         else if (CanSwitchToClimb())
         { 
             currentState = PlayerState.Climb;
@@ -237,6 +236,11 @@ public class ParkourDecider : MonoBehaviour
         }
 
         else if (CanSwitchToFall()) { currentState = PlayerState.Falling; }
+
+        if (currentState != PlayerState.WallRun)
+        {
+            parkourMover.moveSpeed = 20f;
+        }
     }
     private void CheckPlayerState(PlayerState newState)
     {
@@ -406,8 +410,8 @@ public class ParkourDecider : MonoBehaviour
     //--------------------State switcher booleans-----------------//
     public bool CanSwitchToWallRun()
     {
-        return Time.time > lastStateChangeTime + stateChangeCoolTime && parkourMover.fDot >= 0.5f && currentState != previousState
-            && distanceToWall < 1f  && (wallLeft||wallRight); 
+        return Time.time > lastStateChangeTime + stateChangeCoolTime /*&& parkourMover.fDot >= 0.5f*/ && currentState != previousState
+            && distanceToWall < 1f  && (wallLeft||wallRight) && jumpPressed; 
     }
     public bool CanSwitchToClimb()
     {

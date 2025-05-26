@@ -30,9 +30,15 @@ public class ParkourMover : MonoBehaviour
 
             //Debug.Log("Wall Detected?: " + objectDetected + " Can Jump?: " + canJump);
 
+            controller.rb.useGravity = false;
+
+            //Sets rigidbody y velocity to 0
+            controller.rb.linearVelocity =
+                new Vector3(controller.rb.linearVelocity.x, 0f, controller.rb.linearVelocity.z);
+            
             Vector3 wallNormal = decider.wallRight ? decider.rightWallHit.normal : decider.leftWallHit.normal;
             //move direction while running (finds the cross vector of the wall)
-            Vector3 wallRunDire = Vector3.Cross(wallNormal, transform.up);
+            Vector3 wallRunDire = Vector3.Cross(wallNormal, Vector3.up);
             //Debug.Log("Wall Run Direction is: "+wallRunDire);
 
             float wallRelevantDot = Vector3.Dot(wallRunDire, decider.playerForward);
@@ -44,20 +50,16 @@ public class ParkourMover : MonoBehaviour
             if (wallRelevantDot < 0f)
             {
                 //Debug.Log("Banana");
-                controller.rb.AddForce(-wallRunDire * moveSpeed * 10f, ForceMode.Force);
-                controller.rb.useGravity = false;
+                controller.rb.AddForce(-wallRunDire * moveSpeed, ForceMode.Force);
             }
 
             else if (wallRelevantDot > 0f)
             {
                 //Debug.Log("Apple");
-                controller.rb.AddForce(wallRunDire * moveSpeed * 10f, ForceMode.Force);
-                controller.rb.useGravity = false;
+                controller.rb.AddForce(wallRunDire * moveSpeed, ForceMode.Force);
             }
             yield return new WaitForFixedUpdate();
         }
-        controller.rb.useGravity = true;
-
         Debug.Log("Wallrun Routine Cancelled");
     }
 
