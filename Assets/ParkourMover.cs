@@ -30,8 +30,9 @@ public class ParkourMover : MonoBehaviour
 
             //Debug.Log("Wall Detected?: " + objectDetected + " Can Jump?: " + canJump);
 
+            Vector3 wallNormal = decider.wallRight ? decider.rightWallHit.normal : decider.leftWallHit.normal;
             //move direction while running (finds the cross vector of the wall)
-            Vector3 wallRunDire = Vector3.Cross(decider.Hit.normal, Vector3.up);
+            Vector3 wallRunDire = Vector3.Cross(wallNormal, transform.up);
             //Debug.Log("Wall Run Direction is: "+wallRunDire);
 
             float wallRelevantDot = Vector3.Dot(wallRunDire, decider.playerForward);
@@ -57,11 +58,7 @@ public class ParkourMover : MonoBehaviour
         }
         controller.rb.useGravity = true;
 
-
-
-
         Debug.Log("Wallrun Routine Cancelled");
-
     }
 
     public IEnumerator Climb()

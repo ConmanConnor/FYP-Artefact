@@ -25,10 +25,14 @@ public class ParkourDecider : MonoBehaviour
     public bool isMoving;
     public bool canJump;
     public bool jumpPressed;
+    [SerializeField]public bool wallRight;
+    [SerializeField] public bool wallLeft;
 
     //------------Raycast Hits----------------------//
     public RaycastHit Hit;
-
+    public RaycastHit rightWallHit;
+    public RaycastHit leftWallHit;
+    
     //------------Layers Shrek!----------------------//
     [Header("Layermask")]
     [SerializeField]LayerMask layerMaskWall;
@@ -44,6 +48,7 @@ public class ParkourDecider : MonoBehaviour
     private float movementThreshold = 0.15f;
     private float timeOnGround = 0f;
     private float requiredGroundTime = 0.2f;
+    private float wallrunSpeed;
 
     //-----------------------Vectors------------------//
     [Header("Player Vectors")]
@@ -103,7 +108,7 @@ public class ParkourDecider : MonoBehaviour
 
     private void FixedUpdate()
     {
-        CheckWall();
+        NewCheckWall();
 
         stateChecker();
 
@@ -128,6 +133,35 @@ public class ParkourDecider : MonoBehaviour
 
         //Check for state if true set can jump to true
         if (currentState == PlayerState.WallRun) { canJump = true; }
+    }
+
+    private void NewCheckWall()
+    {
+        wallRight = Physics.Raycast(controller.transform.position, controller.transform.right, out rightWallHit, 10f);
+        Debug.DrawRay(controller.transform.position, controller.transform.right * 10f, wallRight ? Color.green : Color.red);
+        
+        wallLeft = Physics.Raycast(controller.transform.position, -controller.transform.right, out leftWallHit, 10f);
+        Debug.DrawRay(controller.transform.position, -controller.transform.right * 10f, wallLeft ? Color.green : Color.red);
+
+        if (wallLeft || wallLeft)
+        {
+            //wall was detected
+            wallDetected = true;
+        }
+        //store distance to obstacle
+        distanceToWall = Mathf.Infinity;
+
+        //Checking each collider around the player
+        foreach (Collider col in Physics.OverlapSphere(controller.transform.position, 3f, layerMaskWall))
+        {
+            //Find the closest possible wall using the distance from the player to the hit collider
+            if (Vector3.Distance(controller.transform.position, col.ClosestPoint(controller.transform.position)) < distanceToWall)
+            {
+                distanceToWall = Vector3.Distance(transform.position, col.ClosestPoint(transform.position));
+            }
+
+        }
+        //Debug.Log("hit distance is: " + distanceToObstacke;
     }
 
     private void CheckWall()
@@ -271,6 +305,7 @@ public class ParkourDecider : MonoBehaviour
                 {
                     lastStateChangeTime = Time.time;
                     isWallrun = true;
+                    parkourMover.moveSpeed = wallrunSpeed;
                     wallRunRoutine = StartCoroutine(parkourMover.WallRun());
                 }
                 break;
@@ -372,7 +407,7 @@ public class ParkourDecider : MonoBehaviour
     public bool CanSwitchToWallRun()
     {
         return Time.time > lastStateChangeTime + stateChangeCoolTime && parkourMover.fDot >= 0.5f && currentState != previousState
-            && distanceToWall < 1f  && wallDetected; 
+            && distanceToWall < 1f  && (wallLeft||wallRight); 
     }
     public bool CanSwitchToClimb()
     {
