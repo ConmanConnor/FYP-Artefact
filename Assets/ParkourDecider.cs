@@ -159,7 +159,10 @@ public class ParkourDecider : MonoBehaviour
             if (Vector3.Distance(controller.transform.position, col.ClosestPoint(controller.transform.position)) < distanceToWall)
             {
                 distanceToWall = Vector3.Distance(transform.position, col.ClosestPoint(transform.position));
-                isWallrun = true;
+                if (jumpPressed)
+                {
+                    isWallrun = true;
+                }
             }
             else
             {
