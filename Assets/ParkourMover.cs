@@ -157,6 +157,28 @@ public class ParkourMover : MonoBehaviour
         //Debug.Log("Jump Routine Ended");
 
     }
+    
+    public IEnumerator WallJump()
+    {
+        //checks if player is grounded
+      
+        if (decider.wallLeft)
+        {
+            //Adds upward force
+            controller.rb.AddForce(Vector3.left + Vector3.up * jumpForce, ForceMode.Impulse);
+        }
+        else if (decider.wallRight)
+        {
+            //Adds upward force
+            controller.rb.AddForce(Vector3.right + Vector3.up * jumpForce, ForceMode.Impulse);
+        }
+
+        //Debug.Log("Jumpy");
+        yield return null;
+        
+        //Debug.Log("Jump Routine Ended");
+
+    }
 
     public IEnumerator Move()
     {

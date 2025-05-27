@@ -25,6 +25,7 @@ public class ParkourDecider : MonoBehaviour
     public bool isMoving;
     public bool canJump;
     public bool jumpPressed;
+    public bool otherjumpPressed;
     [SerializeField]public bool wallRight;
     [SerializeField] public bool wallLeft;
 
@@ -91,6 +92,9 @@ public class ParkourDecider : MonoBehaviour
     {
         playerInput.actions.FindAction("Jump").performed += JumpPerformed;
         playerInput.actions.FindAction("Jump").canceled += JumpCancelled;
+        
+        playerInput.actions.FindAction("WallJump").performed += WallJumpPerformed;
+        playerInput.actions.FindAction("WallJump").canceled += WallJumpCancelled;
 
 
         playerInput.actions.FindAction("Move").performed += MovePerformed;
@@ -101,6 +105,8 @@ public class ParkourDecider : MonoBehaviour
         playerInput.actions.FindAction("Jump").performed -= JumpPerformed;
         playerInput.actions.FindAction("Jump").canceled -= JumpCancelled;
 
+        playerInput.actions.FindAction("WallJump").performed -= WallJumpPerformed;
+        playerInput.actions.FindAction("WallJump").canceled -= WallJumpCancelled;
 
         playerInput.actions.FindAction("Move").performed -= MovePerformed;
         playerInput.actions.FindAction("Move").canceled -= MoveCancelled;
@@ -290,6 +296,13 @@ public class ParkourDecider : MonoBehaviour
                     playerJump = StartCoroutine(parkourMover.Jump());
                 }
                 break;
+            case PlayerState.WallJump:
+                if(playerJump == null)
+                {
+                    lastStateChangeTime = Time.time;
+                    playerJump = StartCoroutine(parkourMover.WallJump());
+                }
+                break;
 
             case PlayerState.Falling:
                 if (controller.rb.linearVelocity.y <= fallingThreshold && !controller.isGrounded)
@@ -379,6 +392,39 @@ public class ParkourDecider : MonoBehaviour
        
 
 
+    }
+    
+    private void WallJumpPerformed(InputAction.CallbackContext context)
+    {
+        if (currentState == PlayerState.WallRun)
+        {
+            InputJump = context.ReadValue<float>();
+
+            //Debug.Log("Jump Pressed: " + InputJump);
+
+            otherjumpPressed = true;
+            currentState = PlayerState.WallJump;
+
+            Debug.Log(InputJump);
+            //Set state to player moving
+        }
+
+    }
+    private void WallJumpCancelled(InputAction.CallbackContext context)
+    {
+
+        InputJump = context.ReadValue<float>();
+
+        //Debug.Log("Jump Cancelled: " + InputJump);
+
+        if(isFalling)
+        {
+            
+            otherjumpPressed = false;
+            
+        }
+
+        playerJump = null;
     }
     private void MovePerformed(InputAction.CallbackContext context)
     {

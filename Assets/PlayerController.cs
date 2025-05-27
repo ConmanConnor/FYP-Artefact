@@ -18,7 +18,8 @@ public enum PlayerState
     Climb,
     Vault,
     Falling,
-    Jumping
+    Jumping,
+    WallJump
 }
 
 public class PlayerController : MonoBehaviour
