@@ -1,3 +1,4 @@
+using Unity.Mathematics;
 using UnityEngine;
 
 public class WallrunTilt : MonoBehaviour
@@ -27,13 +28,19 @@ public class WallrunTilt : MonoBehaviour
         if (decider.isWallrun)
         {
             Vector3 currentEuler = playerCamera.transform.localEulerAngles;
+            Quaternion TargetRot;
+            Quaternion SlerpedRot;
             if (decider.wallRight)
             {
-                playerCamera.transform.localRotation = Quaternion.Euler(currentEuler.x,currentEuler.y,camTilt);
+                TargetRot = Quaternion.Euler(currentEuler.x,currentEuler.y,camTilt);
+                SlerpedRot = Quaternion.Slerp(playerCamera.transform.localRotation, TargetRot, 5f * Time.deltaTime);
+                playerCamera.transform.localRotation = SlerpedRot;
             }
             else if (decider.wallLeft)
             {
-                playerCamera.transform.localRotation = Quaternion.Euler(currentEuler.x,currentEuler.y,-camTilt);
+                TargetRot = Quaternion.Euler(currentEuler.x,currentEuler.y,-camTilt);
+                SlerpedRot = Quaternion.Slerp(playerCamera.transform.localRotation, TargetRot, 5f * Time.deltaTime);
+                playerCamera.transform.localRotation = SlerpedRot;
             }
         }
     }
@@ -43,7 +50,11 @@ public class WallrunTilt : MonoBehaviour
         if (!decider.isWallrun)
         {
             Vector3 currentEuler = playerCamera.transform.localEulerAngles;
-            playerCamera.transform.localRotation = Quaternion.Euler(currentEuler.x, currentEuler.y, 0);
+            Quaternion TargetRot;
+            Quaternion SlerpedRot;
+            TargetRot = Quaternion.Euler(currentEuler.x,currentEuler.y,0);
+            SlerpedRot = Quaternion.Slerp(playerCamera.transform.localRotation, TargetRot, 5f * Time.deltaTime);
+            playerCamera.transform.localRotation = SlerpedRot;
         }
     }
 }
