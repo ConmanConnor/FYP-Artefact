@@ -159,6 +159,11 @@ public class ParkourDecider : MonoBehaviour
             if (Vector3.Distance(controller.transform.position, col.ClosestPoint(controller.transform.position)) < distanceToWall)
             {
                 distanceToWall = Vector3.Distance(transform.position, col.ClosestPoint(transform.position));
+                isWallrun = true;
+            }
+            else
+            {
+                isWallrun = false;
             }
 
         }
@@ -304,7 +309,6 @@ public class ParkourDecider : MonoBehaviour
                  if (wallRunRoutine == null)
                 {
                     lastStateChangeTime = Time.time;
-                    isWallrun = true;
                     parkourMover.moveSpeed = wallrunSpeed;
                     wallRunRoutine = StartCoroutine(parkourMover.WallRun());
                 }
@@ -407,7 +411,7 @@ public class ParkourDecider : MonoBehaviour
     public bool CanSwitchToWallRun()
     {
         return Time.time > lastStateChangeTime + stateChangeCoolTime /*&& parkourMover.fDot >= 0.5f*/ && currentState != previousState
-            && distanceToWall < 1f  && (wallLeft||wallRight) && !controller.isGrounded; 
+            && distanceToWall < 1f  && (wallLeft||wallRight) && isWallrun; 
     }
     public bool CanSwitchToClimb()
     {
