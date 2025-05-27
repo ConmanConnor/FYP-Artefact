@@ -2283,10 +2283,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75e4b1e2d7da62a4492eb9ce0e40e7f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 20
+  moveSpeed: 30
   jumpForce: 18
   fDot: 0
   wallRelDot: 0
+  wallrunTimeLimit: 3
 --- !u!114 &1922013146
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2306,6 +2307,8 @@ MonoBehaviour:
   isMoving: 0
   canJump: 0
   jumpPressed: 0
+  wallRight: 0
+  wallLeft: 0
   layerMaskWall:
     serializedVersion: 2
     m_Bits: 64
@@ -2316,6 +2319,7 @@ MonoBehaviour:
   playerForward: {x: 0, y: 0, z: 0}
   currentState: 0
   InputMove: {x: 0, y: 0}
+  playerInput: {fileID: 0}
 --- !u!114 &1922013147
 MonoBehaviour:
   m_ObjectHideFlags: 0

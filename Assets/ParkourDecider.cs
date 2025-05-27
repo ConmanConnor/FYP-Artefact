@@ -48,7 +48,7 @@ public class ParkourDecider : MonoBehaviour
     private float movementThreshold = 0.15f;
     private float timeOnGround = 0f;
     private float requiredGroundTime = 0.2f;
-    private float wallrunSpeed = 15f;
+    private float wallrunSpeed = 25f;
     private float wallrunTimeLimit = 3f;
 
     //-----------------------Vectors------------------//
@@ -74,7 +74,7 @@ public class ParkourDecider : MonoBehaviour
     public Vector2 InputMove;
 
     
-    PlayerInput playerInput;
+    public PlayerInput playerInput;
 
     //-----------Player Controller-----------//
     PlayerController controller;
@@ -144,10 +144,15 @@ public class ParkourDecider : MonoBehaviour
         wallLeft = Physics.Raycast(controller.transform.position, -controller.transform.right, out leftWallHit, 10f);
         Debug.DrawRay(controller.transform.position, -controller.transform.right * 10f, wallLeft ? Color.green : Color.red);
 
-        if (wallLeft || wallLeft)
+        if (wallLeft || wallRight)
         {
             //wall was detected
             wallDetected = true;
+        }
+        else
+        {
+            //wall was not detected
+            wallDetected = false;
         }
         //store distance to obstacle
         distanceToWall = Mathf.Infinity;
@@ -167,6 +172,7 @@ public class ParkourDecider : MonoBehaviour
             else
             {
                 isWallrun = false;
+                playerInput.actions.FindAction("Move").Enable();
             }
 
         }

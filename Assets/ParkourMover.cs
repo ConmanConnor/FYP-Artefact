@@ -19,7 +19,7 @@ public class ParkourMover : MonoBehaviour
 
     public float wallRelDot;
 
-    [SerializeField]private float wallrunTimeLimit = 3f;
+    [SerializeField] private float wallrunTimeLimit = 3f;
 
     private void Start()
     {
@@ -36,6 +36,10 @@ public class ParkourMover : MonoBehaviour
             {
                 StopWallrun();
             }
+            else if (!decider.wallDetected)
+            {
+                wallrunTimeLimit = 0f;
+            }
         }
     }
 
@@ -47,6 +51,7 @@ public class ParkourMover : MonoBehaviour
             //Debug.Log("Wall Detected?: " + objectDetected + " Can Jump?: " + canJump);
 
             controller.rb.useGravity = false;
+            decider.playerInput.actions.FindAction("Move").Disable();
 
             //Sets rigidbody y velocity to 0
             controller.rb.linearVelocity =
@@ -81,7 +86,7 @@ public class ParkourMover : MonoBehaviour
 
     public void StopWallrun()
     {
-        if (decider.wallRunRoutine != null)
+        if (decider.wallRunRoutine != null || (!decider.wallRight||!decider.wallLeft))
         {
             StopCoroutine(decider.wallRunRoutine);
             decider.wallRunRoutine = null;
@@ -89,6 +94,8 @@ public class ParkourMover : MonoBehaviour
 
         decider.isWallrun = false;
         controller.rb.useGravity = true;
+        moveSpeed = 30f;
+        decider.playerInput.actions.FindAction("Move").Enable();
 
         decider.currentState = PlayerState.Falling;
         wallrunTimeLimit = 3f;
