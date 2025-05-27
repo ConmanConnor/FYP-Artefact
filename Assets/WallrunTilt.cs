@@ -27,13 +27,19 @@ public class WallrunTilt : MonoBehaviour
     {
         if (decider.isWallrun)
         {
+            //Finds the current rotation
             Vector3 currentEuler = playerCamera.transform.localEulerAngles;
             Quaternion TargetRot;
             Quaternion SlerpedRot;
+            
+            //If wallrun right
             if (decider.wallRight)
             {
+                //Set target rotation
                 TargetRot = Quaternion.Euler(currentEuler.x,currentEuler.y,camTilt);
+                //Lerp through current rotation and target rotation for smooth rotation
                 SlerpedRot = Quaternion.Slerp(playerCamera.transform.localRotation, TargetRot, 5f * Time.deltaTime);
+                //Set new rotation
                 playerCamera.transform.localRotation = SlerpedRot;
             }
             else if (decider.wallLeft)
@@ -49,6 +55,7 @@ public class WallrunTilt : MonoBehaviour
     {
         if (!decider.isWallrun)
         {
+            //Reverse of top method
             Vector3 currentEuler = playerCamera.transform.localEulerAngles;
             Quaternion TargetRot;
             Quaternion SlerpedRot;
