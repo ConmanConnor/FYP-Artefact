@@ -78,6 +78,7 @@ public class ParkourDecider : MonoBehaviour
 
     //-----------Player Controller-----------//
     PlayerController controller;
+    
     private void Awake()
     {
         controller = GetComponent<PlayerController>();

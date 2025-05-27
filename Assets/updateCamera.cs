@@ -29,7 +29,7 @@ public class updateCamera : MonoBehaviour
 
         camrotX = Mathf.Clamp(camrotX, -90f, 90f);
 
-        transform.rotation = Quaternion.Euler(camrotX, camrotY, 0);
+        transform.rotation = Quaternion.Euler(camrotX, camrotY,0);
         playerHead.transform.rotation = Quaternion.Euler(0, camrotY, 0);
 
     }
