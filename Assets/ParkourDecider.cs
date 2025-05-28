@@ -43,12 +43,13 @@ public class ParkourDecider : MonoBehaviour
     public float distanceToWall;
     public float fallingThreshold = -5f;
     public float InputJump;
+    public float InputWallJump;
 
     private float stateChangeCoolTime = 0.2f;
     private float lastStateChangeTime = 0f;
     private float movementThreshold = 0.15f;
     private float timeOnGround = 0f;
-    private float requiredGroundTime = 0.2f;
+    private float requiredGroundTime = 0.1f;
     private float wallrunSpeed = 25f;
     private float wallrunTimeLimit = 3f;
 
@@ -69,6 +70,8 @@ public class ParkourDecider : MonoBehaviour
     public Coroutine movePlayer;
 
     public Coroutine playerJump;
+    
+    public Coroutine playerWallJump;
 
     //-------------Inputs--------------------------//
     [Header("Input Components")]
@@ -226,12 +229,7 @@ public class ParkourDecider : MonoBehaviour
 
     private void stateChecker()
     {
-        //Checks if the player can switch to idle
-        if (CanSwitchToIdle()) { currentState = PlayerState.Idle; } //Debug.Log("Player is Idle"); }
-        //Checks if the player can switch to moving
-        else if (CanSwitchToMove()) { currentState = PlayerState.Moving; } //Debug.Log("Player is Moving"); }
-
-        else if (CanSwitchToWallRun())
+        if (CanSwitchToWallRun())
         {
             currentState = PlayerState.WallRun;
 
@@ -255,8 +253,17 @@ public class ParkourDecider : MonoBehaviour
                 controller.rb.useGravity = true;
             }
         }
-
+        
+        else if (CanSwitchToJump()) { currentState = PlayerState.Jumping;}
+        
         else if (CanSwitchToFall()) { currentState = PlayerState.Falling; }
+        
+        //Checks if the player can switch to moving
+        else if (CanSwitchToMove()) { currentState = PlayerState.Moving; } //Debug.Log("Player is Moving"); }
+        
+        //Checks if the player can switch to idle
+        else if (CanSwitchToIdle()) { currentState = PlayerState.Idle; } //Debug.Log("Player is Idle"); }
+      
     }
     private void CheckPlayerState(PlayerState newState)
     {
@@ -297,10 +304,10 @@ public class ParkourDecider : MonoBehaviour
                 }
                 break;
             case PlayerState.WallJump:
-                if(playerJump == null)
+                if(playerWallJump == null)
                 {
                     lastStateChangeTime = Time.time;
-                    playerJump = StartCoroutine(parkourMover.WallJump());
+                    playerWallJump = StartCoroutine(parkourMover.WallJump());
                 }
                 break;
 
@@ -361,14 +368,11 @@ public class ParkourDecider : MonoBehaviour
         InputJump = context.ReadValue<float>();
 
         //Debug.Log("Jump Pressed: " + InputJump);
-
-        if(canJump && currentState != PlayerState.Jumping)
-        {
-            jumpPressed = true;
-            currentState = PlayerState.Jumping;
-        }
-
-
+        
+        jumpPressed = true;
+        
+        currentState = PlayerState.Jumping;
+        
         Debug.Log(InputJump);
         //Set state to player moving
 
@@ -380,32 +384,27 @@ public class ParkourDecider : MonoBehaviour
         InputJump = context.ReadValue<float>();
 
         //Debug.Log("Jump Cancelled: " + InputJump);
-
-      if(isFalling || isWallrun || isClimbing)
-        {
-            
-            jumpPressed = false;
-            
-        }
-
+        
+        jumpPressed = false;
+        
         playerJump = null;
-       
-
-
+        
     }
     
     private void WallJumpPerformed(InputAction.CallbackContext context)
     {
         if (currentState == PlayerState.WallRun)
         {
-            InputJump = context.ReadValue<float>();
+            InputWallJump = context.ReadValue<float>();
 
             //Debug.Log("Jump Pressed: " + InputJump);
 
             otherjumpPressed = true;
             currentState = PlayerState.WallJump;
+            
+            StopCoroutine(wallRunRoutine);
 
-            Debug.Log(InputJump);
+            Debug.Log(InputWallJump);
             //Set state to player moving
         }
 
@@ -413,7 +412,7 @@ public class ParkourDecider : MonoBehaviour
     private void WallJumpCancelled(InputAction.CallbackContext context)
     {
 
-        InputJump = context.ReadValue<float>();
+        InputWallJump = context.ReadValue<float>();
 
         //Debug.Log("Jump Cancelled: " + InputJump);
 
@@ -424,14 +423,14 @@ public class ParkourDecider : MonoBehaviour
             
         }
 
-        playerJump = null;
+        playerWallJump = null;
     }
     private void MovePerformed(InputAction.CallbackContext context)
     {
         //Reads player input as vector 2
         InputMove = context.ReadValue<Vector2>();
         //if coroutine is null and player is not moving 
-        if (movePlayer == null && !isMoving && currentState != PlayerState.Moving)
+        if (movePlayer == null && !isMoving)
         {
 
             //Player is now moving
@@ -476,8 +475,14 @@ public class ParkourDecider : MonoBehaviour
 
     public bool CanSwitchToMove()
     {
-        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState && (currentState == PlayerState.Idle)
-            && controller.rb.linearVelocity.magnitude >= movementThreshold && controller.isGrounded;
+        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState
+               && controller.rb.linearVelocity.x >= movementThreshold && controller.isGrounded;
+    }
+    
+    public bool CanSwitchToJump()
+    {
+        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState && 
+               controller.isGrounded && jumpPressed;
     }
 
     public bool CanSwitchToFall()

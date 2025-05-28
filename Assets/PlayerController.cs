@@ -41,7 +41,7 @@ public class PlayerController : MonoBehaviour
 
     //-----------------------------Floats---------//
     float lastGrounded = 0f;
-    float groundCheckDelay = 0.1f;
+    float groundCheckDelay = 0.2f;
 
 
     //-----------------------Transform(noAutobots)---------//
