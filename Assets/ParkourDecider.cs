@@ -241,6 +241,9 @@ public class ParkourDecider : MonoBehaviour
                 controller.rb.useGravity = true;
             }
         }
+        
+        else if (CanSwitchToWallJump()) { currentState = PlayerState.WallJump;}
+        
         else if (CanSwitchToClimb())
         { 
             currentState = PlayerState.Climb;
@@ -369,9 +372,10 @@ public class ParkourDecider : MonoBehaviour
         InputJump = context.ReadValue<float>();
 
         //Debug.Log("Jump Pressed: " + InputJump);
-        
-        jumpPressed = true;
-        
+
+       
+        //jumpPressed = true;
+
         currentState = PlayerState.Jumping;
         
         Debug.Log(InputJump);
@@ -386,10 +390,11 @@ public class ParkourDecider : MonoBehaviour
 
         //Debug.Log("Jump Cancelled: " + InputJump);
         
-        jumpPressed = false;
-        
+        //jumpPressed = false;
+
         playerJump = null;
         
+
     }
     
     private void WallJumpPerformed(InputAction.CallbackContext context)
@@ -477,13 +482,19 @@ public class ParkourDecider : MonoBehaviour
     public bool CanSwitchToMove()
     {
         return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState
-               && controller.rb.linearVelocity.magnitude >= movementThreshold && controller.isGrounded;
+               && InputMove.magnitude >= movementThreshold && controller.isGrounded;
     }
     
     public bool CanSwitchToJump()
     {
+        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState &&
+               controller.isGrounded && InputJump == 1;
+    }
+    
+    public bool CanSwitchToWallJump()
+    {
         return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState && 
-               controller.isGrounded && jumpPressed;
+               !controller.isGrounded && otherjumpPressed && currentState == PlayerState.WallRun;
     }
 
     public bool CanSwitchToFall()
