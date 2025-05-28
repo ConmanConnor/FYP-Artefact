@@ -2224,6 +2224,10 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: 9caa3d8a-6b2f-4e8e-8bad-6ede561bd9be
     m_ActionName: UI/TrackedDeviceOrientation
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 022e6f85-1f73-4f8b-96c5-193599b4ee5d
+    m_ActionName: 'Player/WallJump[/Keyboard/space]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
@@ -2283,6 +2287,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75e4b1e2d7da62a4492eb9ce0e40e7f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  movedirection: {x: 0, y: 0, z: 0}
   moveSpeed: 30
   jumpForce: 18
   fDot: 0
@@ -2307,14 +2312,16 @@ MonoBehaviour:
   isMoving: 0
   canJump: 0
   jumpPressed: 0
+  otherjumpPressed: 0
   wallRight: 0
   wallLeft: 0
   layerMaskWall:
     serializedVersion: 2
     m_Bits: 64
   distanceToWall: 0
-  fallingThreshold: -1
+  fallingThreshold: -0.5
   InputJump: 0
+  InputWallJump: 0
   playerDire: {x: 0, y: 0, z: 0}
   playerForward: {x: 0, y: 0, z: 0}
   currentState: 0

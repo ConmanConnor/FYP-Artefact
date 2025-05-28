@@ -172,8 +172,16 @@ public class ParkourDecider : MonoBehaviour
             //Find the closest possible wall using the distance from the player to the hit collider
             if (Vector3.Distance(controller.transform.position, col.ClosestPoint(controller.transform.position)) < distanceToWall)
             {
+                //Figures out distance to wall
                 distanceToWall = Vector3.Distance(transform.position, col.ClosestPoint(transform.position));
-                if (jumpPressed)
+                //Works out distance player is from wall (can be used to determine player intention)
+                Vector3 toWall = col.ClosestPoint(transform.position) - transform.position;
+                //Dot to calculate if player is going to a wall
+                float towardsWall = Vector3.Dot(parkourMover.movedirection, toWall.normalized);
+                //Threshold amount before wallrun can happen
+                float wallDetectionThreshold = 0.95f;
+                //if the player is heading into a wall and jump is pressed
+                if (towardsWall < wallDetectionThreshold && InputJump > 0)
                 {
                     isWallrun = true;
                 }
@@ -373,9 +381,6 @@ public class ParkourDecider : MonoBehaviour
 
         //Debug.Log("Jump Pressed: " + InputJump);
 
-       
-        //jumpPressed = true;
-
         currentState = PlayerState.Jumping;
         
         Debug.Log(InputJump);
@@ -389,8 +394,6 @@ public class ParkourDecider : MonoBehaviour
         InputJump = context.ReadValue<float>();
 
         //Debug.Log("Jump Cancelled: " + InputJump);
-        
-        //jumpPressed = false;
 
         playerJump = null;
         

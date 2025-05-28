@@ -10,6 +10,9 @@ public class ParkourMover : MonoBehaviour
     PlayerController controller;
 
     ParkourDecider decider;
+    
+    //-----------------Vectors------------------//
+    public Vector3 movedirection;
 
     //-----------------floats----------------------//
     [Header("Float Values")]
@@ -190,7 +193,7 @@ public class ParkourMover : MonoBehaviour
         {
             //Debug.Log("Move Routine Started");
             //Calculates movement directions using vector 3 and input values
-            Vector3 movedirection = controller.playerHead.forward * decider.InputMove.y + controller.playerHead.right * decider.InputMove.x;
+            movedirection = controller.playerHead.forward * decider.InputMove.y + controller.playerHead.right * decider.InputMove.x;
             //Adds force to player
             controller.rb.AddForce(movedirection.normalized * moveSpeed, ForceMode.Force);
 
