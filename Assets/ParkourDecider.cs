@@ -180,6 +180,7 @@ public class ParkourDecider : MonoBehaviour
                 float towardsWall = Vector3.Dot(parkourMover.movedirection, toWall.normalized);
                 //Threshold amount before wallrun can happen
                 float wallDetectionThreshold = 0.95f;
+                
                 //if the player is heading into a wall and jump is pressed
                 if (towardsWall < wallDetectionThreshold && InputJump > 0)
                 {
