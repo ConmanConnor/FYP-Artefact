@@ -41,7 +41,7 @@ public class ParkourDecider : MonoBehaviour
     //------------Floats----------------------//
     [Header("Float Values")]
     public float distanceToWall;
-    public float fallingThreshold = -5f;
+    public float fallingThreshold;
     public float InputJump;
     public float InputWallJump;
 
@@ -278,36 +278,40 @@ public class ParkourDecider : MonoBehaviour
         //Switches between states
         switch (newState)
         {
-            case PlayerState.Idle:
-                lastStateChangeTime = Time.time;
-                if (movePlayer != null)
-                {
-                    StopCoroutine(movePlayer);
-                    movePlayer = null;
-                    isMoving = false;
-                }
-                break;
-
-            case PlayerState.Moving:
-                if(movePlayer == null)
+            case PlayerState.WallRun:
+                if (wallRunRoutine == null)
                 {
                     lastStateChangeTime = Time.time;
-                    movePlayer = StartCoroutine(parkourMover.Move());
+                    parkourMover.moveSpeed = wallrunSpeed;
+                    wallRunRoutine = StartCoroutine(parkourMover.WallRun());
                 }
                 break;
-
-            case PlayerState.Jumping:
-                if(playerJump == null)
-                {
-                    lastStateChangeTime = Time.time;
-                    playerJump = StartCoroutine(parkourMover.Jump());
-                }
-                break;
+            
             case PlayerState.WallJump:
                 if(playerWallJump == null)
                 {
                     lastStateChangeTime = Time.time;
                     playerWallJump = StartCoroutine(parkourMover.WallJump());
+                }
+                break;
+
+            case PlayerState.Climb:
+                if(climbRunRoutine == null)
+                {
+                    lastStateChangeTime = Time.time;
+                    isClimbing = true;
+                    climbRunRoutine = StartCoroutine(parkourMover.Climb());
+                }
+                break;
+
+            case PlayerState.Vault:
+                break;
+            
+            case PlayerState.Jumping:
+                if(playerJump == null)
+                {
+                    lastStateChangeTime = Time.time;
+                    playerJump = StartCoroutine(parkourMover.Jump());
                 }
                 break;
 
@@ -333,28 +337,25 @@ public class ParkourDecider : MonoBehaviour
                 }
                
                 break;
-
-            case PlayerState.WallRun:
-                 if (wallRunRoutine == null)
+            
+            case PlayerState.Moving:
+                if(movePlayer == null)
                 {
                     lastStateChangeTime = Time.time;
-                    parkourMover.moveSpeed = wallrunSpeed;
-                    wallRunRoutine = StartCoroutine(parkourMover.WallRun());
+                    movePlayer = StartCoroutine(parkourMover.Move());
                 }
                 break;
-
-            case PlayerState.Climb:
-                if(climbRunRoutine == null)
+            
+            case PlayerState.Idle:
+                lastStateChangeTime = Time.time;
+                if (movePlayer != null)
                 {
-                    lastStateChangeTime = Time.time;
-                    isClimbing = true;
-                    climbRunRoutine = StartCoroutine(parkourMover.Climb());
+                    StopCoroutine(movePlayer);
+                    movePlayer = null;
+                    isMoving = false;
                 }
                 break;
-
-            case PlayerState.Vault:
-                break;
-
+            
             default:
                 break;
         }
@@ -476,7 +477,7 @@ public class ParkourDecider : MonoBehaviour
     public bool CanSwitchToMove()
     {
         return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState
-               && controller.rb.linearVelocity.x >= movementThreshold && controller.isGrounded;
+               && controller.rb.linearVelocity.magnitude >= movementThreshold && controller.isGrounded;
     }
     
     public bool CanSwitchToJump()
