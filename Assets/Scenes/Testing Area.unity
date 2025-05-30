@@ -2711,7 +2711,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   movedirection: {x: 0, y: 0, z: 0}
   moveSpeed: 30
-  jumpForce: 18
+  jumpForce: 25
   fDot: 0
   wallRelDot: 0
   wallrunTimeLimit: 3
