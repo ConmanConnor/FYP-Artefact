@@ -121,6 +121,8 @@ public class ParkourDecider : MonoBehaviour
     {
         NewCheckWall();
 
+        CheckEdge();
+
         stateChecker();
 
 
@@ -198,28 +200,9 @@ public class ParkourDecider : MonoBehaviour
         //Debug.Log("hit distance is: " + distanceToObstacke;
     }
 
-    private void CheckWall()
+    private void CheckEdge()
     {
-        //Detects if a wall was hit
-        wallDetected = false;
-
-        //Raycast position = player position
-        Vector3 wallRayPos = controller.transform.position;
-
-        if (Physics.Raycast(wallRayPos, controller.transform.forward, out Hit, 10f, layerMaskWall))
-        {
-
-            //wall was detected
-            wallDetected = true;
-
-            Debug.DrawRay(wallRayPos, controller.transform.forward * 10f, Color.green);
-
-        }
-        else
-        {
-            //draw different color ray
-            Debug.DrawRay(wallRayPos, controller.transform.forward * 10f, Color.red);
-        }
+        //Put edge checker here
 
         //store distance to obstacle
         distanceToWall = Mathf.Infinity;
