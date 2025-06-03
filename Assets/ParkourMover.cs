@@ -202,4 +202,17 @@ public class ParkourMover : MonoBehaviour
         //Debug.Log("Move Routine Ended");
 
     }
+    
+    public IEnumerator Slide()
+    {
+        while (decider.InputSlide == 1)
+        {
+            //Adds force to player
+            controller.rb.AddForce(movedirection.normalized * moveSpeed, ForceMode.Acceleration);
+
+            yield return new WaitForFixedUpdate();
+        }
+        //Debug.Log("Move Routine Ended");
+
+    }
 }

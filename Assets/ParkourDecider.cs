@@ -10,12 +10,6 @@ public class ParkourDecider : MonoBehaviour
     //------------Other Scripts-------------------//
     ParkourMover parkourMover;
 
-    //------------Coroutines----------------------//
-    public Coroutine wallRunRoutine;
-
-    Coroutine climbRunRoutine;
-
-
     //------------Booleans----------------------//
     [Header("Boolean Checks")]
     public bool wallDetected;
@@ -44,6 +38,7 @@ public class ParkourDecider : MonoBehaviour
     public float fallingThreshold;
     public float InputJump;
     public float InputWallJump;
+    public float InputSlide;
 
     private float stateChangeCoolTime = 0.2f;
     private float lastStateChangeTime = 0f;
@@ -72,11 +67,16 @@ public class ParkourDecider : MonoBehaviour
     public Coroutine playerJump;
     
     public Coroutine playerWallJump;
+    
+    public Coroutine wallRunRoutine;
+    
+    public Coroutine SlideRoutine;
+
+    Coroutine climbRunRoutine;
 
     //-------------Inputs--------------------------//
     [Header("Input Components")]
     public Vector2 InputMove;
-
     
     public PlayerInput playerInput;
 
@@ -97,6 +97,9 @@ public class ParkourDecider : MonoBehaviour
         playerInput.actions.FindAction("Jump").performed += JumpPerformed;
         playerInput.actions.FindAction("Jump").canceled += JumpCancelled;
         
+        playerInput.actions.FindAction("Slide").performed += SlidePerformed;
+        playerInput.actions.FindAction("Slide").canceled += SlideCancelled;
+        
         playerInput.actions.FindAction("WallJump").performed += WallJumpPerformed;
         playerInput.actions.FindAction("WallJump").canceled += WallJumpCancelled;
 
@@ -108,6 +111,9 @@ public class ParkourDecider : MonoBehaviour
     {
         playerInput.actions.FindAction("Jump").performed -= JumpPerformed;
         playerInput.actions.FindAction("Jump").canceled -= JumpCancelled;
+        
+        playerInput.actions.FindAction("Slide").performed -= SlidePerformed;
+        playerInput.actions.FindAction("Slide").canceled -= SlideCancelled;
 
         playerInput.actions.FindAction("WallJump").performed -= WallJumpPerformed;
         playerInput.actions.FindAction("WallJump").canceled -= WallJumpCancelled;
@@ -257,6 +263,8 @@ public class ParkourDecider : MonoBehaviour
         //Checks if the player can switch to moving
         else if (CanSwitchToMove()) { currentState = PlayerState.Moving; } //Debug.Log("Player is Moving"); }
         
+        else if (CanSwitchToSlide()) { currentState = PlayerState.Sliding;}
+        
         //Checks if the player can switch to idle
         else if (CanSwitchToIdle()) { currentState = PlayerState.Idle; } //Debug.Log("Player is Idle"); }
       
@@ -333,6 +341,17 @@ public class ParkourDecider : MonoBehaviour
                 }
                
                 break;
+            case PlayerState.Sliding:
+                if(SlideRoutine == null)
+                {
+                    lastStateChangeTime = Time.time;
+                    SlideRoutine = StartCoroutine(parkourMover.Slide());
+                }
+                else
+                {
+                    StopCoroutine(SlideRoutine);
+                }
+                break;
             
             case PlayerState.Moving:
                 if(movePlayer == null)
@@ -358,6 +377,30 @@ public class ParkourDecider : MonoBehaviour
     }
 
     //------------------Input Handlers----------------------//
+    
+    private void SlidePerformed(InputAction.CallbackContext context)
+    {
+
+        InputSlide = context.ReadValue<float>();
+
+        //Debug.Log("Jump Pressed: " + InputJump);
+
+        currentState = PlayerState.Sliding;
+        
+        Debug.Log(InputJump);
+        //Set state to player moving
+
+
+    }
+    
+    private void SlideCancelled(InputAction.CallbackContext context)
+    {
+        
+        InputSlide = context.ReadValue<float>();
+
+        SlideRoutine = null;
+
+    }
 
     private void JumpPerformed(InputAction.CallbackContext context)
     {
@@ -465,6 +508,12 @@ public class ParkourDecider : MonoBehaviour
     {
         return Time.time > lastStateChangeTime + stateChangeCoolTime && parkourMover.fDot <= -0.5f && currentState != previousState
             && distanceToWall < 1f  && wallDetected; 
+    }
+    
+    public bool CanSwitchToSlide()
+    {
+        return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState && controller.isGrounded
+            && InputSlide > 0;
     }
 
     public bool CanSwitchToMove()

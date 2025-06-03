@@ -123,6 +123,16 @@ public class WallrunTilt : MonoBehaviour
                 pos.y = Mathf.Lerp(pos.y, Mathf.Sin(Time.time * frequency) * Amount * 1.4f, Tspeed * Time.deltaTime);
                 transform.localPosition += pos;
             }
+            else if (decider.InputMove.y == -1)
+            {
+                float frequency = 18.0f;
+                float Amount = 0.3f;
+                float Tspeed = 8.0f;
+                
+                Vector3 pos = Vector3.zero;
+                pos.y = -Mathf.Lerp(pos.y, Mathf.Sin(Time.time * frequency) * Amount * 1.4f, Tspeed * Time.deltaTime);
+                transform.localPosition += pos;
+            }
         }
     }
 }

@@ -8,6 +8,12 @@ public class updateCamera : MonoBehaviour
 
     float m_lookSpeed = 200;
 
+    private float crouchAmount = 0.400f;
+    
+    private float StartPosY;
+    
+    ParkourDecider decider;
+
     float camrotX;
     float camrotY;
 
@@ -17,6 +23,8 @@ public class updateCamera : MonoBehaviour
         transform.position = playerHead.position;
 
         Look();
+        
+        CrouchPos();
     }
 
     private void Look()
@@ -38,5 +46,21 @@ public class updateCamera : MonoBehaviour
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        
+        decider = GetComponent<ParkourDecider>();
+
+        StartPosY = playerHead.position.y;
+    }
+    
+    public void CrouchPos()
+    {
+        if (decider.InputSlide > 0)
+        {
+            transform.localScale = new Vector3(playerHead.position.x, crouchAmount, playerHead.position.z) ;
+        }
+        else
+        {
+            transform.position = playerHead.position;
+        }
     }
 }
