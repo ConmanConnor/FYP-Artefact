@@ -89,7 +89,7 @@ public class WallrunTilt : MonoBehaviour
             if (decider.InputMove.x == 1)
             {
                 //Set target rotation
-                TargetRot = Quaternion.Euler(currentEuler.x, currentEuler.y, -9);
+                TargetRot = Quaternion.Euler(currentEuler.x, currentEuler.y, -3);
                 //Lerp through current rotation and target rotation for smooth rotation
                 SlerpedRot = Quaternion.Slerp(playerCamera.transform.localRotation, TargetRot, 5f * Time.deltaTime);
                 //Set new rotation
@@ -97,19 +97,19 @@ public class WallrunTilt : MonoBehaviour
             }
             else if (decider.InputMove.x == -1)
             {
-                TargetRot = Quaternion.Euler(currentEuler.x, currentEuler.y, 9);
+                TargetRot = Quaternion.Euler(currentEuler.x, currentEuler.y, 3);
                 SlerpedRot = Quaternion.Slerp(playerCamera.transform.localRotation, TargetRot, 5f * Time.deltaTime);
                 playerCamera.transform.localRotation = SlerpedRot;
             }
             else if (decider.InputMove.x == 1 && decider.InputMove.y == 1)
             {
-                TargetRot = Quaternion.Euler(currentEuler.x, currentEuler.y, 9);
+                TargetRot = Quaternion.Euler(currentEuler.x, currentEuler.y, -3);
                 SlerpedRot = Quaternion.Slerp(playerCamera.transform.localRotation, TargetRot, 5f * Time.deltaTime);
                 playerCamera.transform.localRotation = SlerpedRot;
             }
             else if (decider.InputMove.x == -1 && decider.InputMove.y == -1)
             {
-                TargetRot = Quaternion.Euler(currentEuler.x, currentEuler.y, 9);
+                TargetRot = Quaternion.Euler(currentEuler.x, currentEuler.y, 3);
                 SlerpedRot = Quaternion.Slerp(playerCamera.transform.localRotation, TargetRot, 5f * Time.deltaTime);
                 playerCamera.transform.localRotation = SlerpedRot;
             }
