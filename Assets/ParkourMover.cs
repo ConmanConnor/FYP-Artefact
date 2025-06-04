@@ -168,13 +168,13 @@ public class ParkourMover : MonoBehaviour
         {
             if (decider.wallLeft)
             {
-                Vector3 Direction = controller.playerCamera.transform.forward;
+                Vector3 Direction = Vector3.up + Vector3.left;
                 //Adds upward force
                 controller.rb.AddForce(Direction * jumpForce, ForceMode.Impulse);
             }
             else if (decider.wallRight)
             {
-                Vector3 Direction = controller.playerCamera.transform.forward;
+                Vector3 Direction = Vector3.up + Vector3.right;
                 //Adds upward force
                 controller.rb.AddForce( Direction * jumpForce, ForceMode.Impulse);
             }
