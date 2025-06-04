@@ -140,19 +140,7 @@ public class ParkourDecider : MonoBehaviour
             playerRotation.z = 0;
             transform.rotation = playerRotation;
         }
-        if (exitWallTimer > 0)
-        {
-            exitWallTimer -= Time.deltaTime;
-        }
-        if(exitWallTimer <= 0)
-        {
-            exitingWall = false;
-                
-            exitWallTimer = 0;
-            
-        }
         
-
         directionOfPlayer = controller.rb.linearVelocity.normalized;
 
         playerForward = controller.transform.forward.normalized;
@@ -161,9 +149,6 @@ public class ParkourDecider : MonoBehaviour
     private void Update()
     {
         CheckPlayerState(currentState);
-
-        //Check for state if true set can jump to true
-        if (currentState == PlayerState.WallRun) { canJump = true; }
     }
 
     private void NewCheckWall()
@@ -253,7 +238,29 @@ public class ParkourDecider : MonoBehaviour
             }
         }
         
-        else if (CanSwitchToWallJump()) { currentState = PlayerState.WallJump;}
+        else if (CanSwitchToWallJump())
+        {
+            currentState = PlayerState.WallJump;
+        }
+        else if (exitingWall)
+        {
+            if (isWallrun)
+            {
+                parkourMover.StopWallrun();
+                
+            }
+            if (exitWallTimer > 0)
+            {
+                exitWallTimer -= Time.deltaTime;
+            }
+            if(exitWallTimer <= 0)
+            {
+                exitingWall = false;
+                
+                exitWallTimer = 0;
+            
+            }
+        }
         
         else if (CanSwitchToClimb())
         { 
@@ -305,7 +312,7 @@ public class ParkourDecider : MonoBehaviour
                 if(playerWallJump == null)
                 {
                     lastStateChangeTime = Time.time;
-                    playerWallJump = StartCoroutine(parkourMover.WallJump());
+                    //playerWallJump = StartCoroutine(parkourMover.WallJump());
                 }
                 else
                 {
@@ -478,7 +485,7 @@ public class ParkourDecider : MonoBehaviour
     public bool CanSwitchToWallRun()
     {
         return Time.time > lastStateChangeTime + stateChangeCoolTime /*&& parkourMover.fDot >= 0.5f*/ && currentState != previousState
-            && distanceToWall < 1f  && (wallLeft||wallRight) && isWallrun && !exitingWall; 
+            && distanceToWall < 1f  && (wallLeft||wallRight) && !exitingWall; 
     }
     public bool CanSwitchToClimb()
     {

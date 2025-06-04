@@ -51,24 +51,26 @@ public class ParkourMover : MonoBehaviour
     {
         Debug.Log("Wallrunning");
 
-            //Debug.Log("Wall Detected?: " + objectDetected + " Can Jump?: " + canJump);
+        //Debug.Log("Wall Detected?: " + objectDetected + " Can Jump?: " + canJump);
+        
+        decider.isWallrun = true;
 
-            controller.rb.useGravity = false;
-            decider.playerInput.actions.FindAction("Move").Disable();
-            decider.playerInput.actions.FindAction("Jump").Disable();
+        controller.rb.useGravity = false;
+        decider.playerInput.actions.FindAction("Move").Disable();
+        decider.playerInput.actions.FindAction("Jump").Disable();
 
-            //Sets rigidbody y velocity to 0
-            controller.rb.linearVelocity =
-                new Vector3(controller.rb.linearVelocity.x, 0f, controller.rb.linearVelocity.z);
+        //Sets rigidbody y velocity to 0
+        controller.rb.linearVelocity =
+            new Vector3(controller.rb.linearVelocity.x, 0f, controller.rb.linearVelocity.z);
             
-            Vector3 wallNormal = decider.wallRight ? decider.rightWallHit.normal : decider.leftWallHit.normal;
-            //move direction while running (finds the cross vector of the wall)
-            Vector3 wallRunDire = Vector3.Cross(wallNormal, Vector3.up);
-            //Debug.Log("Wall Run Direction is: "+wallRunDire);
+        Vector3 wallNormal = decider.wallRight ? decider.rightWallHit.normal : decider.leftWallHit.normal;
+        //move direction while running (finds the cross vector of the wall)
+        Vector3 wallRunDire = Vector3.Cross(wallNormal, Vector3.up);
+        //Debug.Log("Wall Run Direction is: "+wallRunDire);
 
-            float wallRelevantDot = Vector3.Dot(wallRunDire, decider.playerForward);
+        float wallRelevantDot = Vector3.Dot(wallRunDire, decider.playerForward);
 
-            Debug.Log(wallRelevantDot);
+       // Debug.Log(wallRelevantDot);
         //moves player based on direction of approach (left,right,forward)
         while (decider.isWallrun)
         {
@@ -83,13 +85,13 @@ public class ParkourMover : MonoBehaviour
                 //Debug.Log("Apple");
                 controller.rb.AddForce(wallRunDire * moveSpeed, ForceMode.Force);
             }
-            else if (decider.InputWallJump > 0)
+            else if (Input.GetKeyDown(KeyCode.Space))
             {
-                StartCoroutine(WallJump());
+                WallJump();
             }
             else if (decider.exitingWall)
             {
-                if(decider.isWallrun)StopWallrun();
+                
             }
             yield return new WaitForFixedUpdate();
         }
@@ -102,12 +104,15 @@ public class ParkourMover : MonoBehaviour
         {
             StopCoroutine(decider.wallRunRoutine);
             decider.wallRunRoutine = null;
-            decider.isWallrun = false;
-            controller.rb.useGravity = true;
-            moveSpeed = 30f;
-        
-            wallrunTimeLimit = 3f;
         }
+        
+        decider.isWallrun = false;
+        controller.rb.useGravity = true;
+        moveSpeed = 30f;
+        wallrunTimeLimit = 3f;
+            
+        decider.playerInput.actions.FindAction("Move").Enable();
+        decider.playerInput.actions.FindAction("Jump").Enable();
     }
 
     public IEnumerator Climb()
@@ -165,19 +170,19 @@ public class ParkourMover : MonoBehaviour
 
     }
     
-    public IEnumerator WallJump()
+    public void WallJump()
     {
         decider.exitingWall = true;
         decider.exitWallTimer = decider.exitWallTime;
         
-        decider.playerInput.actions.FindAction("Move").Enable();
+        /*decider.playerInput.actions.FindAction("Move").Enable();
         decider.playerInput.actions.FindAction("Jump").Enable();
         
         decider.isWallrun = false;
         controller.rb.useGravity = true;
         moveSpeed = 30f;
         
-        wallrunTimeLimit = 3f;
+        wallrunTimeLimit = 3f;*/
         
         //Figure out which side to wall jump from
         Vector3 wallNormal = decider.wallRight ? decider.rightWallHit.normal : decider.leftWallHit.normal;
@@ -188,7 +193,7 @@ public class ParkourMover : MonoBehaviour
         //Reset y velocity then add force
         controller.rb.linearVelocity  = new Vector3(controller.rb.linearVelocity.x, 0f, controller.rb.linearVelocity.z);
         controller.rb.AddForce(ForcetoApply, ForceMode.Impulse);
-        yield return null;
+       // yield return null;
         //Debug.Log("Jump Routine Ended");
     }
 
