@@ -28,6 +28,7 @@ public class ParkourDecider : MonoBehaviour
     public bool otherjumpPressed;
     [SerializeField]public bool wallRight;
     [SerializeField] public bool wallLeft;
+    public bool exitingWall;
 
     //------------Raycast Hits----------------------//
     public RaycastHit Hit;
@@ -52,6 +53,10 @@ public class ParkourDecider : MonoBehaviour
     private float requiredGroundTime = 0.1f;
     private float wallrunSpeed = 25f;
     private float wallrunTimeLimit = 3f;
+    public float exitWallTime = .2f;
+    public float exitWallTimer;
+    private float towardsWall;
+    private float wallDetectionThreshold;
 
     //-----------------------Vectors------------------//
     [Header("Player Vectors")]
@@ -60,6 +65,7 @@ public class ParkourDecider : MonoBehaviour
     Vector3 directionOfPlayer;
     public Vector3 playerForward;
     private PlayerState previousState;
+    private Vector3 toWall;
 
     //------------------Player Stae---------------------//
     [Header("Finite State Machine")]
@@ -134,6 +140,18 @@ public class ParkourDecider : MonoBehaviour
             playerRotation.z = 0;
             transform.rotation = playerRotation;
         }
+        if (exitWallTimer > 0)
+        {
+            exitWallTimer -= Time.deltaTime;
+        }
+        if(exitWallTimer <= 0)
+        {
+            exitingWall = false;
+                
+            exitWallTimer = 0;
+            
+        }
+        
 
         directionOfPlayer = controller.rb.linearVelocity.normalized;
 
@@ -178,11 +196,11 @@ public class ParkourDecider : MonoBehaviour
                 //Figures out distance to wall
                 distanceToWall = Vector3.Distance(transform.position, col.ClosestPoint(transform.position));
                 //Works out distance player is from wall (can be used to determine player intention)
-                Vector3 toWall = col.ClosestPoint(transform.position) - transform.position;
+                 toWall = col.ClosestPoint(transform.position) - transform.position;
                 //Dot to calculate if player is going to a wall
-                float towardsWall = Vector3.Dot(parkourMover.movedirection, toWall.normalized);
+                 towardsWall = Vector3.Dot(parkourMover.movedirection, toWall.normalized);
                 //Threshold amount before wallrun can happen
-                float wallDetectionThreshold = 0.95f;
+                 wallDetectionThreshold = 0.95f;
                 
                 //if the player is heading into a wall and jump is pressed
                 if (towardsWall < wallDetectionThreshold && InputJump > 0)
@@ -289,6 +307,11 @@ public class ParkourDecider : MonoBehaviour
                     lastStateChangeTime = Time.time;
                     playerWallJump = StartCoroutine(parkourMover.WallJump());
                 }
+                else
+                {
+                    StopCoroutine(playerWallJump);
+                }
+           
                 break;
 
             case PlayerState.Climb:
@@ -409,13 +432,9 @@ public class ParkourDecider : MonoBehaviour
         InputWallJump = context.ReadValue<float>();
 
         //Debug.Log("Jump Cancelled: " + InputJump);
-
-        if(isFalling)
-        {
-            
-            otherjumpPressed = false;
-            
-        }
+        
+        otherjumpPressed = false;
+       
 
         playerWallJump = null;
     }
@@ -459,7 +478,7 @@ public class ParkourDecider : MonoBehaviour
     public bool CanSwitchToWallRun()
     {
         return Time.time > lastStateChangeTime + stateChangeCoolTime /*&& parkourMover.fDot >= 0.5f*/ && currentState != previousState
-            && distanceToWall < 1f  && (wallLeft||wallRight) && isWallrun; 
+            && distanceToWall < 1f  && (wallLeft||wallRight) && isWallrun && !exitingWall; 
     }
     public bool CanSwitchToClimb()
     {
@@ -482,7 +501,7 @@ public class ParkourDecider : MonoBehaviour
     public bool CanSwitchToWallJump()
     {
         return Time.time > lastStateChangeTime + stateChangeCoolTime && currentState != previousState && 
-               !controller.isGrounded && otherjumpPressed && currentState == PlayerState.WallRun;
+               !controller.isGrounded && otherjumpPressed && currentState == PlayerState.WallRun && InputWallJump > 0;
     }
 
     public bool CanSwitchToFall()

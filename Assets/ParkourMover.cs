@@ -55,6 +55,7 @@ public class ParkourMover : MonoBehaviour
 
             controller.rb.useGravity = false;
             decider.playerInput.actions.FindAction("Move").Disable();
+            decider.playerInput.actions.FindAction("Jump").Disable();
 
             //Sets rigidbody y velocity to 0
             controller.rb.linearVelocity =
@@ -82,6 +83,14 @@ public class ParkourMover : MonoBehaviour
                 //Debug.Log("Apple");
                 controller.rb.AddForce(wallRunDire * moveSpeed, ForceMode.Force);
             }
+            else if (decider.InputWallJump > 0)
+            {
+                StartCoroutine(WallJump());
+            }
+            else if (decider.exitingWall)
+            {
+                if(decider.isWallrun)StopWallrun();
+            }
             yield return new WaitForFixedUpdate();
         }
         Debug.Log("Wallrun Routine Cancelled");
@@ -93,15 +102,12 @@ public class ParkourMover : MonoBehaviour
         {
             StopCoroutine(decider.wallRunRoutine);
             decider.wallRunRoutine = null;
+            decider.isWallrun = false;
+            controller.rb.useGravity = true;
+            moveSpeed = 30f;
+        
+            wallrunTimeLimit = 3f;
         }
-
-        decider.isWallrun = false;
-        controller.rb.useGravity = true;
-        moveSpeed = 30f;
-        decider.playerInput.actions.FindAction("Move").Enable();
-
-        decider.currentState = PlayerState.Falling;
-        wallrunTimeLimit = 3f;
     }
 
     public IEnumerator Climb()
@@ -134,8 +140,6 @@ public class ParkourMover : MonoBehaviour
         controller.rb.useGravity = true;
         Debug.Log("Climb Routine ended");
 
-
-
     }
 
     public IEnumerator Jump()
@@ -163,28 +167,29 @@ public class ParkourMover : MonoBehaviour
     
     public IEnumerator WallJump()
     {
-        //checks if player is grounded
-        if (decider.wallDetected)
-        {
-            if (decider.wallLeft)
-            {
-                Vector3 Direction = Vector3.up + Vector3.left;
-                //Adds upward force
-                controller.rb.AddForce(Direction * jumpForce, ForceMode.Impulse);
-            }
-            else if (decider.wallRight)
-            {
-                Vector3 Direction = Vector3.up + Vector3.right;
-                //Adds upward force
-                controller.rb.AddForce( Direction * jumpForce, ForceMode.Impulse);
-            }
-        }
-
-        //Debug.Log("Jumpy");
-        yield return null;
+        decider.exitingWall = true;
+        decider.exitWallTimer = decider.exitWallTime;
         
+        decider.playerInput.actions.FindAction("Move").Enable();
+        decider.playerInput.actions.FindAction("Jump").Enable();
+        
+        decider.isWallrun = false;
+        controller.rb.useGravity = true;
+        moveSpeed = 30f;
+        
+        wallrunTimeLimit = 3f;
+        
+        //Figure out which side to wall jump from
+        Vector3 wallNormal = decider.wallRight ? decider.rightWallHit.normal : decider.leftWallHit.normal;
+        
+        //Caluclation for the force that needs to be applied
+        Vector3 ForcetoApply = transform.up * 5f + wallNormal * 5f;
+        
+        //Reset y velocity then add force
+        controller.rb.linearVelocity  = new Vector3(controller.rb.linearVelocity.x, 0f, controller.rb.linearVelocity.z);
+        controller.rb.AddForce(ForcetoApply, ForceMode.Impulse);
+        yield return null;
         //Debug.Log("Jump Routine Ended");
-
     }
 
     public IEnumerator Move()
