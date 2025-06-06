@@ -97,8 +97,8 @@ public class ParkourDecider : MonoBehaviour
         playerInput.actions.FindAction("Jump").performed += JumpPerformed;
         playerInput.actions.FindAction("Jump").canceled += JumpCancelled;
         
-        playerInput.actions.FindAction("WallJump").performed += WallJumpPerformed;
-        playerInput.actions.FindAction("WallJump").canceled += WallJumpCancelled;
+        /*playerInput.actions.FindAction("WallJump").performed += WallJumpPerformed;
+        playerInput.actions.FindAction("WallJump").canceled += WallJumpCancelled;*/
 
 
         playerInput.actions.FindAction("Move").performed += MovePerformed;
@@ -109,8 +109,8 @@ public class ParkourDecider : MonoBehaviour
         playerInput.actions.FindAction("Jump").performed -= JumpPerformed;
         playerInput.actions.FindAction("Jump").canceled -= JumpCancelled;
 
-        playerInput.actions.FindAction("WallJump").performed -= WallJumpPerformed;
-        playerInput.actions.FindAction("WallJump").canceled -= WallJumpCancelled;
+        /*playerInput.actions.FindAction("WallJump").performed -= WallJumpPerformed;
+        playerInput.actions.FindAction("WallJump").canceled -= WallJumpCancelled;*/
 
         playerInput.actions.FindAction("Move").performed -= MovePerformed;
         playerInput.actions.FindAction("Move").canceled -= MoveCancelled;
@@ -193,7 +193,9 @@ public class ParkourDecider : MonoBehaviour
             else
             {
                 isWallrun = false;
+                parkourMover.StopWallrun();
                 playerInput.actions.FindAction("Move").Enable();
+                playerInput.actions.FindAction("Jump").Enable();
             }
 
         }
@@ -287,7 +289,7 @@ public class ParkourDecider : MonoBehaviour
                 if(playerWallJump == null)
                 {
                     lastStateChangeTime = Time.time;
-                    playerWallJump = StartCoroutine(parkourMover.WallJump());
+                    //playerWallJump = StartCoroutine(parkourMover.WallJump());
                 }
                 break;
 
@@ -385,7 +387,7 @@ public class ParkourDecider : MonoBehaviour
 
     }
     
-    private void WallJumpPerformed(InputAction.CallbackContext context)
+    /*private void WallJumpPerformed(InputAction.CallbackContext context)
     {
         if (currentState == PlayerState.WallRun)
         {
@@ -418,7 +420,7 @@ public class ParkourDecider : MonoBehaviour
         }
 
         playerWallJump = null;
-    }
+    }*/
     private void MovePerformed(InputAction.CallbackContext context)
     {
         //Reads player input as vector 2

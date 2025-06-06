@@ -55,6 +55,7 @@ public class ParkourMover : MonoBehaviour
 
             controller.rb.useGravity = false;
             decider.playerInput.actions.FindAction("Move").Disable();
+            decider.playerInput.actions.FindAction("Jump").Disable();
 
             //Sets rigidbody y velocity to 0
             controller.rb.linearVelocity =
@@ -99,6 +100,7 @@ public class ParkourMover : MonoBehaviour
         controller.rb.useGravity = true;
         moveSpeed = 30f;
         decider.playerInput.actions.FindAction("Move").Enable();
+        decider.playerInput.actions.FindAction("Jump").Enable();
 
         decider.currentState = PlayerState.Falling;
         wallrunTimeLimit = 3f;
@@ -161,7 +163,7 @@ public class ParkourMover : MonoBehaviour
 
     }
     
-    public IEnumerator WallJump()
+    /*public IEnumerator WallJump()
     {
         //checks if player is grounded
         if (decider.wallDetected)
@@ -185,7 +187,7 @@ public class ParkourMover : MonoBehaviour
         
         //Debug.Log("Jump Routine Ended");
 
-    }
+    }*/
 
     public IEnumerator Move()
     {
